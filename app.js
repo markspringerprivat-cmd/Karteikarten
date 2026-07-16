@@ -94,180 +94,102 @@ const SLIDE_DETAIL_OPTIONS = {
   }
 };
 
-const JSON_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen Lernkartensatz für die Webanwendung „KartenWerk“.
+const JSON_PROMPT = `AUFGABE
+Erstelle aus den angehängten Dateien und/oder dem Text unter AUSGANGSTEXT einen vollständigen KartenWerk-Lernkartensatz. Nutze ausschließlich sicher erkennbare Quelleninformationen; nichts ergänzen oder recherchieren.
 
-QUELLE ERKENNEN:
-- Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen.
-- Sie kann alternativ direkt unter „AUSGANGSTEXT“ in diese Nachricht eingefügt sein.
-- Falls Anhänge und eingefügter Text vorhanden sind, berücksichtige beides gemeinsam, sofern nichts anderes angegeben ist.
-- Falls mehrere Dateien angehängt sind, werte alle relevanten Dateien gemeinsam aus.
-- Verwende ausschließlich Informationen aus der bereitgestellten Quelle. Erfinde, ergänze oder recherchiere nichts.
-- Kann ein Teil der Quelle technisch nicht gelesen werden, erfinde keinen Ersatz. Verarbeite nur sicher erkennbare Inhalte.
-
-PRIORITÄTEN BEI WIDERSPRÜCHEN:
-1. Verwende ausschließlich Informationen aus der Quelle.
-2. Bewahre den fachlichen Sinn vollständig und korrekt.
-3. Befolge die Regeln des ausgewählten Aufbereitungsmodus und der gewählten Kartenaufteilung.
-4. Bewahre erkennbare Gliederungen, Listen, Tabellen und Reihenfolgen.
-5. Formuliere so knapp wie möglich, ohne eine höhere Priorität zu verletzen.
-
+MODUS
 {{MODE_RULES}}
-
 {{VARIANT_RULES}}
 
-INHALTLICHE VORGABEN:
-1. Bestimme einen aussagekräftigen Titel für das Lernprojekt.
-2. Ordne die Karten in sinnvolle Oberthemen. Diese Oberthemen bilden in KartenWerk das Inhaltsverzeichnis.
-3. Die Vorderseite „front“ enthält eine eindeutige Frage, einen präzisen Begriff oder im Folienmodus den Folientitel.
-4. Die Rückseite „back“ ist immer ein Array aus strukturierten Inhaltsblöcken.
-5. Übertrage die sichtbare Struktur der Quelle: Zwischenüberschriften als Überschriftenblöcke, Absätze als Absatzblöcke, Stichpunkte als Listenblöcke, nummerierte Schritte als nummerierte Listen und Tabellen als Tabellenblöcke.
-6. Nutze Tabellen nur, wenn die Quelle tatsächlich eine Tabelle oder eine eindeutig tabellarische Gegenüberstellung enthält. Übernimm Überschriften, Zeilen und Spalten in der ursprünglichen Reihenfolge.
-7. Lange Rückseiten sind erlaubt. Kürze, teile oder verkleinere Inhalte nicht allein aufgrund einer angenommenen Bildschirmhöhe; KartenWerk scrollt den Karteninhalt.
-8. Übernimm nach Möglichkeit die Fundstelle jeder Karte. Verwende nur tatsächlich erkennbare Datei-, Seiten- oder Folienangaben.
+KARTEN
+- Projekt in sinnvolle Oberthemen gliedern.
+- front: eindeutige Frage, Begriff oder im Folienmodus der Folientitel.
+- back: Array aus strukturierten Blöcken.
+- Lange Karten sind erlaubt; KartenWerk scrollt den Karteninhalt.
+- Sichtbare Reihenfolge, Hierarchie, Fachbegriffe, Zahlen, Listen und Tabellen bewahren.
 
-ZULÄSSIGE INHALTSBLÖCKE FÜR „back“:
-- Zwischenüberschrift: { "type": "heading", "text": "Überschrift innerhalb der Rückseite" }
-- Absatz: { "type": "paragraph", "text": "Ein zusammenhängender Absatz ohne Aufzählungszeichen." }
-- Ungeordnete Stichpunktliste: { "type": "list", "style": "unordered", "items": ["Erster Stichpunkt", "Zweiter Stichpunkt"] }
-- Nummerierte Liste: { "type": "list", "style": "ordered", "items": ["Erster Schritt", "Zweiter Schritt"] }
-- Tabelle: { "type": "table", "headers": ["Spalte 1", "Spalte 2"], "rows": [["Zelle 1", "Zelle 2"], ["Zelle 3", "Zelle 4"]] }
+BACK-BLÖCKE
+{ "type":"heading", "text":"Zwischenüberschrift" }
+{ "type":"paragraph", "text":"Absatz" }
+{ "type":"list", "style":"unordered", "items":["Punkt 1","Punkt 2"] }
+{ "type":"list", "style":"ordered", "items":["Schritt 1","Schritt 2"] }
+{ "type":"table", "headers":["A","B"], "rows":[["a1","b1"],["a2","b2"]] }
 
-FORMATREGELN FÜR INHALTSBLÖCKE:
-- „back“ muss bei jeder Karte ein JSON-Array sein, auch wenn die Rückseite nur einen Absatz enthält.
-- Schreibe Aufzählungszeichen wie •, -, * oder Nummern niemals direkt in einen Absatztext. Verwende dafür einen Listenblock.
-- Speichere jeden Stichpunkt als eigenes Element in „items“.
-- Verwende in Textfeldern keine sichtbaren Zeichenfolgen wie \\n, \\r oder <br>.
-- Verwende innerhalb der Karteninhalte kein Markdown, kein HTML und keine Codeblöcke.
-- Jede Tabellenzeile muss gleich viele Zellen besitzen wie die Tabelle Spalten hat.
-- Erfinde keine Tabelle, wenn die Quelle keine Tabelle oder klar tabellarische Gegenüberstellung enthält.
+REGELN
+- Aufzählungszeichen nie als normalen Absatz speichern; jeder Punkt ist ein eigenes items-Element.
+- Keine sichtbaren \\n, \\r, <br>, Markdown- oder HTML-Zeichen in Textfeldern.
+- Tabellen nur übernehmen, wenn die Quelle eine Tabelle oder klare Gegenüberstellung enthält; alle Zeilen gleich breit.
+- Jede Karte erhält eine eindeutige ID card-001, card-002 usw.
+- source nur mit sicher erkennbaren Angaben füllen, sonst null.
 
-VERBINDLICHES JSON-SCHEMA:
-Verwende exakt diese Struktur. Die Felder „page“ und „slide“ enthalten eine Zahl oder null. „file“ enthält den erkennbaren Dateinamen oder null.
-
+JSON-SCHEMA
 {
-  "schemaVersion": 3,
-  "generationMode": "{{MODE_KEY}}",
-  "modeVariant": "{{VARIANT_KEY}}",
-  "projectTitle": "Aussagekräftiger Titel des Lernprojekts",
-  "sections": [
-    {
-      "title": "Titel des Oberthemas",
-      "cards": [
-        {
-          "id": "card-001",
-          "front": "Frage, Begriff oder Folientitel",
-          "back": [
-            { "type": "heading", "text": "Optionale Zwischenüberschrift" },
-            { "type": "paragraph", "text": "Einleitende Erklärung." },
-            { "type": "list", "style": "unordered", "items": ["Erster Stichpunkt", "Zweiter Stichpunkt"] },
-            { "type": "table", "headers": ["Merkmal", "Bedeutung"], "rows": [["Beispiel A", "Erklärung A"], ["Beispiel B", "Erklärung B"]] }
-          ],
-          "source": { "file": null, "page": null, "slide": null }
-        }
-      ]
-    }
-  ]
+  "schemaVersion":3,
+  "generationMode":"{{MODE_KEY}}",
+  "modeVariant":"{{VARIANT_KEY}}",
+  "projectTitle":"Titel",
+  "sections":[{
+    "title":"Oberthema",
+    "cards":[{
+      "id":"card-001",
+      "front":"Frage oder Titel",
+      "back":[{"type":"paragraph","text":"Antwort"}],
+      "source":{"file":null,"page":null,"slide":null}
+    }]
+  }]
 }
 
-QUALITÄTSPRÜFUNG VOR DER DATEIERSTELLUNG:
-Prüfe jede Karte still und korrigiere Fehler vor der Ausgabe:
-- Ist die Vorderseite eindeutig und verrät sie die Antwort nicht unnötig?
-- Entspricht die Kartenteilung dem gewählten Modus und der gewählten Variante?
-- Ist jede Aussage aus der Quelle ableitbar?
-- Wurden Fachbegriffe im Normalmodus wortlautnah bewahrt?
-- Wurden im Advanced-Modus keine fremden Erklärungen oder Beispiele ergänzt?
-- Entspricht im Folienmodus jede Karte genau einer Folie beziehungsweise Seite?
-- Sind Listen, Zwischenüberschriften und Tabellen als eigene Blöcke gespeichert?
-- Gibt es leere, doppelte oder nahezu identische Karten?
-- Enthält kein Textfeld sichtbare \\n-, \\r-, HTML- oder Markdown-Steuerzeichen?
-- Besitzt jede Karte eine eindeutige ID im Muster card-001, card-002 und so weiter?
-- Ist das gesamte Dokument gültiges JSON ohne abschließende Kommas?
+GROSSE PROJEKTE
+- Beginne mit der Erstellung; lehne die Aufgabe nicht vorsorglich wegen möglicher Ausgabelimits ab.
+- Passt alles in eine Datei, erstelle genau eine Datei.
+- Ist das Projekt zu groß, teile es automatisch in mehrere gültige JSON-Dateien mit höchstens 80 Karten je Datei.
+- Jede Teil-Datei verwendet dasselbe projectTitle und enthält nur vollständige Karten. Benenne sie kartenwerk-kurztitel-teil-01.json, -teil-02.json usw.
+- KartenWerk kann alle Teil-Dateien gleichzeitig auswählen und wieder zu einem Projekt zusammenführen.
 
-DATEIAUSGABE – SEHR WICHTIG:
-1. Erstelle eine echte, herunterladbare UTF-8-Datei mit der Endung .json und dem MIME-Typ application/json.
-2. Benenne sie nach dem Muster „kartenwerk-kurztitel.json“. Verwende im Dateinamen nur Kleinbuchstaben, Zahlen und Bindestriche.
-3. Stelle die fertige JSON-Datei als herunterladbaren Dateianhang beziehungsweise Download-Link bereit.
-4. Schreibe den JSON-Inhalt NICHT in den Chat, NICHT in einen Markdown-Codeblock und NICHT als Vorschau.
-5. Im Chat darf außer einem kurzen Hinweis auf die fertige Datei kein Karteninhalt erscheinen.
-6. Falls in dieser ChatGPT-Umgebung technisch keine Datei erstellt werden kann, gib nicht ersatzweise den JSON-Code aus. Teile nur knapp mit, dass keine Datei erzeugt werden konnte.
+AUSGABE
+- Erstelle echte UTF-8-.json-Dateien als herunterladbare Anhänge. Schreibe den JSON-Inhalt nicht in den Chat oder in Codeblöcke.
+- Prüfe vor dem Speichern: gültiges JSON, keine leeren/doppelten Karten, korrekte Blöcke, ausschließlich Quelleninhalt.
+- Falls Dateierstellung technisch wirklich unmöglich ist, erkläre das erst nach einem tatsächlichen Erstellungsversuch knapp.
 
-AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
-[TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
+AUSGANGSTEXT
+[TEXT HIER EINFÜGEN ODER LEER LASSEN, WENN DIE QUELLE ANGEHÄNGT WIRD.]`;
+const DELIMITER_PROMPT = `AUFGABE
+Erstelle aus angehängten Dateien und/oder AUSGANGSTEXT einen vollständigen KartenWerk-Lernkartensatz. Nutze ausschließlich Quelleninformationen.
 
-const DELIMITER_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen Lernkartensatz für die Webanwendung „KartenWerk“.
-
-QUELLE ERKENNEN:
-- Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen oder direkt unter „AUSGANGSTEXT“ stehen.
-- Anhänge und eingefügten Text gemeinsam berücksichtigen, sofern nichts anderes angegeben ist.
-- Verwende ausschließlich sicher erkennbare Informationen aus der Quelle. Erfinde, ergänze oder recherchiere nichts.
-
-PRIORITÄTEN BEI WIDERSPRÜCHEN:
-1. Ausschließlich Quelleninformationen verwenden.
-2. Fachlichen Sinn vollständig bewahren.
-3. Gewählten Modus und gewählte Kartenaufteilung befolgen.
-4. Sichtbare Gliederung, Reihenfolge, Listen und Tabellen bewahren.
-5. So knapp wie möglich formulieren, ohne eine höhere Priorität zu verletzen.
-
+MODUS
 {{MODE_RULES}}
-
 {{VARIANT_RULES}}
 
-INHALTLICHE VORGABEN:
-1. Bestimme einen Projekttitel und sinnvolle Oberthemen.
-2. Die Vorderseite ist eine eindeutige Frage, ein präziser Begriff oder im Folienmodus der Folientitel.
-3. Übertrage Absätze, Stichpunkte, nummerierte Schritte, Zwischenüberschriften und Tabellen erkennbar.
-4. Lange Rückseiten sind erlaubt. Kürze oder teile nicht allein wegen der Bildschirmgröße; KartenWerk scrollt den Inhalt.
+AUSGABEFORMAT
+Gib reinen Text aus. Trenne jede Karte durch eine eigene Zeile mit §§§.
 
-Gib das Ergebnis als reinen Text im Chat aus. Verwende exakt dieses Grundformat:
-
-PROJEKT: Titel des Lernprojekts
-
+PROJEKT: Titel
 §§§
-
-THEMA: Name des Oberthemas
+THEMA: Oberthema
 VORDERSEITE: Frage oder Begriff
 RÜCKSEITE:
-Ein normaler Absatz.
+Normaler Absatz.
 
-- Erster Stichpunkt
-- Zweiter Stichpunkt
+- Stichpunkt 1
+- Stichpunkt 2
 
-1. Erster nummerierter Schritt
-2. Zweiter nummerierter Schritt
+1. Schritt 1
+2. Schritt 2
 
-| Merkmal | Bedeutung |
+| Spalte A | Spalte B |
 | --- | --- |
-| Beispiel A | Erklärung A |
-| Beispiel B | Erklärung B |
-
+| Inhalt A | Inhalt B |
 §§§
 
-THEMA: Name des nächsten Oberthemas
-VORDERSEITE: Nächste Frage oder nächster Begriff
-RÜCKSEITE:
-Nächste Erklärung
+REGELN
+- Sichtbare Struktur, Reihenfolge, Fachbegriffe, Zahlen, Listen und Tabellen bewahren.
+- Echte Zeilenumbrüche verwenden; niemals sichtbare \\n- oder \\r-Zeichen.
+- Lange Karten sind erlaubt; KartenWerk scrollt sie.
+- Tabellen nur übernehmen, wenn sie in der Quelle vorhanden oder eindeutig als Gegenüberstellung angelegt sind.
+- Bei sehr großen Projekten in logisch nummerierte Teile aufteilen, ohne Karten abzuschneiden.
 
-FORMATREGELN:
-- Zwischen zwei Karten steht eine eigene Zeile mit genau drei Paragrafzeichen: §§§
-- Vor und nach der §§§-Zeile steht jeweils eine Leerzeile.
-- Wiederhole „THEMA:“ bei jeder Karte.
-- Erzeuge echte Zeilenumbrüche. Schreibe niemals die sichtbaren Zeichenfolgen \\n oder \\r.
-- Jeder Stichpunkt beginnt in einer eigenen Zeile mit „- “.
-- Jeder nummerierte Punkt beginnt in einer eigenen Zeile mit „1. “, „2. “ und so weiter.
-- Tabellen werden als Markdown-Tabelle mit senkrechten Strichen und einer Trennzeile ausgegeben.
-- Verwende keine Einleitung, keine Abschlussbemerkung und keine Markdown-Codeblöcke.
-- In diesem Textmodus soll keine Datei erstellt werden.
-
-PRÜFUNG VOR DER AUSGABE:
-- Keine erfundenen Informationen.
-- Keine leeren oder doppelten Karten.
-- Kartenteilung entspricht dem gewählten Modus.
-- Im Folienmodus entspricht jede Karte genau einer Folie beziehungsweise Seite.
-- Listen und Tabellen sind korrekt formatiert.
-
-AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
-[TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
-
+AUSGANGSTEXT
+[TEXT HIER EINFÜGEN ODER LEER LASSEN, WENN DIE QUELLE ANGEHÄNGT WIRD.]`;
 const state = {
   projects: loadProjects(),
   importTab: 'file',
@@ -510,7 +432,7 @@ function openInstructionsDialog() {
         </article>
         <article class="instruction-card">
           <span>3</span>
-          <div><h3>Datei importieren</h3><p>Lade die erzeugte JSON-Datei in KartenWerk hoch. Alternativ kannst du den §§§-Textmodus verwenden. Danach erscheint das Projekt auf der Startseite.</p></div>
+          <div><h3>Datei importieren</h3><p>Lade eine JSON-Datei oder alle erzeugten Teil-Dateien gemeinsam hoch. KartenWerk führt sie automatisch zu einem Projekt zusammen. Alternativ kannst du den §§§-Textmodus verwenden.</p></div>
         </article>
       </div>
 
@@ -707,7 +629,7 @@ function openCreateProjectDialog() {
             </details>
 
             <div class="notice info" id="formatNotice">${state.promptMode === 'json'
-              ? 'ChatGPT soll eine echte .json-Datei erzeugen. Diese lädst du anschließend unten in KartenWerk hoch.'
+              ? 'ChatGPT erstellt eine oder bei großen Projekten mehrere .json-Dateien. Du kannst alle Teil-Dateien gemeinsam hochladen.'
               : 'ChatGPT gibt formatierten §§§-Text aus. Diesen kopierst du anschließend unten in KartenWerk.'}</div>
           </div>
         </section>
@@ -716,7 +638,7 @@ function openCreateProjectDialog() {
           <div class="flow-step-number">3</div>
           <div class="flow-step-content">
             <h3>Ergebnis in KartenWerk importieren</h3>
-            <p>Lade die JSON-Datei hoch oder füge die Textausgabe ein. Danach erscheint das Projekt automatisch auf der Startseite.</p>
+            <p>Lade eine JSON-Datei oder mehrere Teil-Dateien gemeinsam hoch. KartenWerk fügt sie automatisch zusammen. Alternativ kannst du Text einfügen.</p>
             <div class="field">
               <label class="label" for="projectTitleOverride">Eigener Projektname <span class="optional">optional</span></label>
               <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Sonst wird der Titel aus der Datei übernommen">
@@ -730,9 +652,9 @@ function openCreateProjectDialog() {
             <div id="fileImport" class="${state.importTab === 'file' ? '' : 'hidden'}">
               <label class="dropzone mobile-dropzone" id="dropzone" for="fileInput">
                 <span class="dropzone-icon" aria-hidden="true">＋</span>
-                <div><strong>JSON- oder TXT-Datei auswählen</strong><span>Antippen oder Datei hier ablegen</span></div>
+                <div><strong>JSON- oder TXT-Datei(en) auswählen</strong><span>Einzeldatei oder mehrere Teil-Dateien gemeinsam auswählen</span></div>
               </label>
-              <input class="hidden" id="fileInput" type="file" accept=".json,.txt,application/json,text/plain">
+              <input class="hidden" id="fileInput" type="file" multiple accept=".json,.txt,application/json,text/plain">
             </div>
 
             <div id="pasteImport" class="${state.importTab === 'paste' ? '' : 'hidden'}">
@@ -777,7 +699,7 @@ function bindCreateDialogEvents() {
       document.querySelectorAll('[data-create-prompt-mode]').forEach((item) => item.classList.toggle('active', item === button));
       document.getElementById('promptPreview').textContent = getActivePrompt();
       document.getElementById('formatNotice').textContent = state.promptMode === 'json'
-        ? 'ChatGPT soll eine echte .json-Datei erzeugen. Diese lädst du anschließend unten in KartenWerk hoch.'
+        ? 'ChatGPT erstellt eine oder bei großen Projekten mehrere .json-Dateien. Du kannst alle Teil-Dateien gemeinsam hochladen.'
         : 'ChatGPT gibt formatierten §§§-Text aus. Diesen kopierst du anschließend unten in KartenWerk.';
       setImportTab(state.importTab);
     });
@@ -828,7 +750,7 @@ function bindCreateDialogEvents() {
   const fileInput = document.getElementById('fileInput');
   const dropzone = document.getElementById('dropzone');
   fileInput.addEventListener('change', () => {
-    if (fileInput.files?.[0]) importFile(fileInput.files[0]);
+    if (fileInput.files?.length) importFiles(Array.from(fileInput.files));
   });
   ['dragenter', 'dragover'].forEach((name) => dropzone.addEventListener(name, (event) => {
     event.preventDefault();
@@ -839,8 +761,8 @@ function bindCreateDialogEvents() {
     dropzone.classList.remove('dragging');
   }));
   dropzone.addEventListener('drop', (event) => {
-    const file = event.dataTransfer.files?.[0];
-    if (file) importFile(file);
+    const files = Array.from(event.dataTransfer.files || []);
+    if (files.length) importFiles(files);
   });
 }
 
@@ -1161,18 +1083,62 @@ function startStudySession(projectId, mode, sectionIds) {
   window.location.href = `study.html?${params.toString()}`;
 }
 
-function importFile(file) {
-  if (!/\.(json|txt)$/i.test(file.name) && !['application/json', 'text/plain'].includes(file.type)) {
-    toast('Dateityp nicht unterstützt', 'Bitte eine JSON- oder TXT-Datei auswählen.');
+function importFiles(files) {
+  const supported = files.filter((file) => /\.(json|txt)$/i.test(file.name) || ['application/json', 'text/plain'].includes(file.type));
+  if (!supported.length) {
+    toast('Dateityp nicht unterstützt', 'Bitte JSON- oder TXT-Dateien auswählen.');
     return;
   }
-  const reader = new FileReader();
-  reader.onload = () => {
-    const override = document.getElementById('projectTitleOverride')?.value || '';
-    importProjectText(String(reader.result || ''), override);
+  if (supported.length !== files.length) {
+    toast('Einige Dateien übersprungen', 'Nur JSON- und TXT-Dateien werden verarbeitet.');
+  }
+
+  Promise.all(supported.map(readTextFile))
+    .then((texts) => {
+      const override = document.getElementById('projectTitleOverride')?.value || '';
+      if (texts.length === 1) {
+        importProjectText(texts[0], override);
+        return;
+      }
+      const payloads = texts.map(parseImport);
+      const merged = mergeImportPayloads(payloads);
+      importParsedProject(merged, override, `${texts.length} Teil-Dateien`);
+    })
+    .catch((error) => {
+      console.error(error);
+      toast('Import fehlgeschlagen', error.message || 'Mindestens eine Datei konnte nicht gelesen werden.');
+    });
+}
+
+function readTextFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error(`Die Datei „${file.name}“ konnte nicht gelesen werden.`));
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+function mergeImportPayloads(payloads) {
+  const first = payloads[0] || {};
+  const sectionMap = new Map();
+  payloads.forEach((payload) => {
+    const sections = Array.isArray(payload?.sections)
+      ? payload.sections
+      : (Array.isArray(payload?.cards) ? [{ title: 'Allgemein', cards: payload.cards }] : []);
+    sections.forEach((section) => {
+      const title = String(section?.title || 'Allgemein').trim() || 'Allgemein';
+      if (!sectionMap.has(title)) sectionMap.set(title, []);
+      if (Array.isArray(section?.cards)) sectionMap.get(title).push(...section.cards);
+    });
+  });
+  return {
+    schemaVersion: first.schemaVersion || 3,
+    generationMode: first.generationMode,
+    modeVariant: first.modeVariant,
+    projectTitle: first.projectTitle || first.title || 'Importiertes Lernprojekt',
+    sections: Array.from(sectionMap, ([title, cards]) => ({ title, cards }))
   };
-  reader.onerror = () => toast('Datei konnte nicht gelesen werden', 'Bitte versuche es erneut.');
-  reader.readAsText(file, 'utf-8');
 }
 
 function importProjectText(raw, titleOverride = '') {
@@ -1183,18 +1149,23 @@ function importProjectText(raw, titleOverride = '') {
 
   try {
     const parsed = parseImport(raw);
-    const project = normalizeProject(parsed, titleOverride);
-    if (!countCards(project)) throw new Error('Es wurden keine gültigen Karten gefunden.');
-    state.projects.push(project);
-    saveProjects();
-    if (appDialog.open) appDialog.close();
-    location.hash = '';
-    renderDashboard();
-    toast('Projekt erstellt', `${countCards(project)} Karten wurden importiert und als Kachel gespeichert.`);
+    importParsedProject(parsed, titleOverride);
   } catch (error) {
     console.error(error);
     toast('Import fehlgeschlagen', error.message || 'Das Format konnte nicht gelesen werden.');
   }
+}
+
+function importParsedProject(parsed, titleOverride = '', sourceLabel = '') {
+  const project = normalizeProject(parsed, titleOverride);
+  if (!countCards(project)) throw new Error('Es wurden keine gültigen Karten gefunden.');
+  state.projects.push(project);
+  saveProjects();
+  if (appDialog.open) appDialog.close();
+  location.hash = '';
+  renderDashboard();
+  const suffix = sourceLabel ? ` aus ${sourceLabel}` : '';
+  toast('Projekt erstellt', `${countCards(project)} Karten${suffix} wurden zusammengeführt und gespeichert.`);
 }
 
 function parseImport(raw) {
