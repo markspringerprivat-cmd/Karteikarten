@@ -86,20 +86,20 @@ function render() {
 
       <div class="card-stage" id="cardStage">
         <span class="swipe-indicator left ${session.index === 0 ? 'disabled' : ''}" aria-hidden="true">‹</span>
-        <button class="session-card ${session.flipped ? 'flipped' : ''}" id="sessionCard" type="button" aria-label="Karte umdrehen">
-          <span class="session-card-inner">
-            <span class="session-face front">
-              <span class="face-top"><span class="face-kicker">${escapeHTML(card.sectionTitle)}</span><span class="face-side">${escapeHTML(statusText)}</span></span>
-              <span class="front-content"><h1 class="front-title fit-front">${escapeHTML(card.front)}</h1></span>
-              <span class="face-hint">Antippen zum Umdrehen · nach links oder rechts wischen</span>
-            </span>
-            <span class="session-face back">
-              <span class="face-top"><span class="face-kicker">Antwort</span><span class="face-side">${escapeHTML(card.sectionTitle)}</span></span>
-              <span class="answer-viewport"><span class="answer-content fit-answer">${formatAnswer(card.back)}</span></span>
-              <span class="face-hint">Antippen, um wieder die Vorderseite zu sehen</span>
-            </span>
-          </span>
-        </button>
+        <div class="session-card ${session.flipped ? 'flipped' : ''}" id="sessionCard" role="button" tabindex="0" aria-label="Karte umdrehen">
+          <div class="session-card-inner">
+            <div class="session-face front">
+              <div class="face-top"><span class="face-kicker">${escapeHTML(card.sectionTitle)}</span><span class="face-side">${escapeHTML(statusText)}</span></div>
+              <div class="front-content"><h1 class="front-title fit-front">${escapeHTML(card.front)}</h1></div>
+              <div class="face-hint">Antippen zum Umdrehen · nach links oder rechts wischen</div>
+            </div>
+            <div class="session-face back">
+              <div class="face-top"><span class="face-kicker">Antwort</span><span class="face-side">${escapeHTML(card.sectionTitle)}</span></div>
+              <div class="answer-viewport"><div class="answer-content fit-answer">${formatAnswer(card.back)}</div></div>
+              <div class="face-hint">Antippen, um wieder die Vorderseite zu sehen</div>
+            </div>
+          </div>
+        </div>
         <span class="swipe-indicator right ${session.index === session.cards.length - 1 ? 'disabled' : ''}" aria-hidden="true">›</span>
       </div>
     </section>
@@ -159,6 +159,11 @@ function bindSessionEvents() {
   document.getElementById('flipButton')?.addEventListener('click', toggleFlip);
   document.querySelectorAll('[data-rate]').forEach((button) => button.addEventListener('click', () => rate(button.dataset.rate)));
   bindSwipe(document.getElementById('cardStage'));
+  document.querySelectorAll('.rich-table-scroll').forEach((tableRegion) => {
+    tableRegion.addEventListener('click', (event) => event.stopPropagation());
+    tableRegion.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true });
+    tableRegion.addEventListener('touchend', (event) => event.stopPropagation(), { passive: true });
+  });
 }
 
 function bindSwipe(element) {
@@ -179,8 +184,8 @@ function bindSwipe(element) {
     const touch = event.changedTouches[0];
     const dx = touch.clientX - startX;
     const dy = touch.clientY - startY;
+    if (Math.hypot(dx, dy) > 10) session.lastSwipeAt = Date.now();
     if (Math.abs(dx) < 52 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
-    session.lastSwipeAt = Date.now();
     move(dx < 0 ? 1 : -1);
   }, { passive: true });
 }
@@ -308,7 +313,7 @@ function renderError(title, message) {
 
 function fitCardContent() {
   fitElement(document.querySelector('.fit-front'), 18);
-  fitElement(document.querySelector('.fit-answer'), 12);
+  fitElement(document.querySelector('.fit-answer'), 14);
 }
 
 function fitElement(element, minimum) {
@@ -361,35 +366,8 @@ function showToast(message) {
   setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
-function formatAnswer(text) {
-  const escaped = escapeHTML(text).replace(/\r\n/g, '\n');
-  const lines = escaped.split('\n');
-  let html = '';
-  let listType = null;
-  const closeList = () => {
-    if (listType) html += `</${listType}>`;
-    listType = null;
-  };
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    const bullet = line.match(/^[-•*]\s+(.+)/);
-    const numbered = line.match(/^\d+[.)]\s+(.+)/);
-    if (bullet) {
-      if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; }
-      html += `<li>${bullet[1]}</li>`;
-    } else if (numbered) {
-      if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; }
-      html += `<li>${numbered[1]}</li>`;
-    } else if (line) {
-      closeList();
-      html += `<p>${line}</p>`;
-    } else {
-      closeList();
-    }
-  }
-  closeList();
-  return html || '<p>Keine Erklärung vorhanden.</p>';
+function formatAnswer(content) {
+  return window.KartenWerkRichText?.render(content) || '<p>Keine Erklärung vorhanden.</p>';
 }
 
 function escapeHTML(value) {

@@ -2,7 +2,7 @@
 
 const STORAGE_KEY = 'kartenwerk.projects.v1';
 const THEME_KEY = 'kartenwerk.theme.v1';
-const APP_VERSION = 1;
+const APP_VERSION = 2;
 
 const CARD_CREATION_MODES = {
   normal: {
@@ -69,12 +69,31 @@ INHALTLICHE VORGABEN:
 2. Ordne den Inhalt in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
 3. Befolge bei Bildung, Reihenfolge und Anzahl der Karten strikt die Regeln des oben gewählten Aufbereitungsmodus.
 4. Die Vorderseite „front“ enthält eine eindeutige Frage oder einen präzisen Begriff.
-5. Die Rückseite „back“ enthält eine verständliche, fachlich korrekte und lernbare Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
-6. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
-7. Formuliere knapp, aber vollständig. Zeilenumbrüche innerhalb einer Rückseite dürfen als \\n gespeichert werden.
+5. Die Rückseite „back“ ist KEIN einfacher Fließtext, sondern immer eine Liste strukturierter Inhaltsblöcke.
+6. Übertrage die sichtbare Struktur der Quelle: Absätze als Absatzblöcke, Stichpunkte als Listenblöcke, nummerierte Schritte als nummerierte Listen und Tabellen als Tabellenblöcke.
+7. Nutze Tabellen nur, wenn die Quelle tatsächlich eine Tabelle oder eine eindeutig tabellarische Gegenüberstellung enthält. Übernimm Überschriften, Zeilen und Spalten in der ursprünglichen Reihenfolge.
+8. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
+9. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
+10. Formuliere knapp, aber vollständig.
+
+ZULÄSSIGE INHALTSBLÖCKE FÜR „back“:
+- Absatz: { "type": "paragraph", "text": "Ein zusammenhängender Absatz ohne Aufzählungszeichen." }
+- Ungeordnete Stichpunktliste: { "type": "list", "style": "unordered", "items": ["Erster Stichpunkt", "Zweiter Stichpunkt"] }
+- Nummerierte Liste: { "type": "list", "style": "ordered", "items": ["Erster Schritt", "Zweiter Schritt"] }
+- Tabelle: { "type": "table", "headers": ["Spalte 1", "Spalte 2"], "rows": [["Zelle 1", "Zelle 2"], ["Zelle 3", "Zelle 4"]] }
+
+FORMATREGELN FÜR INHALTSBLÖCKE – SEHR WICHTIG:
+- „back“ muss bei jeder Karte ein JSON-Array sein, auch wenn die Rückseite nur aus einem einzigen Absatz besteht.
+- Schreibe niemals Aufzählungszeichen wie •, -, * oder Nummern direkt in einen Absatztext. Verwende dafür einen Listenblock.
+- Speichere jeden Stichpunkt als eigenes Element in „items“.
+- Verwende in Textfeldern keine Zeichenfolgen wie \\n, \\r oder <br>. Erzeuge keine künstlichen Zeilenumbrüche innerhalb eines Textfeldes.
+- Verwende kein Markdown, kein HTML und keine Codeblöcke innerhalb der Karteninhalte.
+- Jede Tabellenzeile muss gleich viele Zellen besitzen wie die Tabelle Spalten hat.
+- Leere Tabellenzellen dürfen als leere Zeichenfolge "" gespeichert werden.
+- Wenn eine Quelle keine Tabelle enthält, erfinde keine Tabelle.
 
 VERBINDLICHES DATEIFORMAT:
-Erstelle den Inhalt exakt nach diesem JSON-Schema und verwende keine zusätzlichen Schlüssel:
+Erstelle den Inhalt exakt nach diesem JSON-Schema und verwende außerhalb der gezeigten Struktur keine zusätzlichen Schlüssel:
 
 {
   "projectTitle": "Aussagekräftiger Titel des Lernprojekts",
@@ -84,7 +103,11 @@ Erstelle den Inhalt exakt nach diesem JSON-Schema und verwende keine zusätzlich
       "cards": [
         {
           "front": "Frage oder Begriff auf der Vorderseite",
-          "back": "Erklärung auf der Rückseite"
+          "back": [
+            { "type": "paragraph", "text": "Einleitende Erklärung." },
+            { "type": "list", "style": "unordered", "items": ["Erster Stichpunkt", "Zweiter Stichpunkt"] },
+            { "type": "table", "headers": ["Merkmal", "Bedeutung"], "rows": [["Beispiel A", "Erklärung A"], ["Beispiel B", "Erklärung B"]] }
+          ]
         }
       ]
     }
@@ -95,9 +118,10 @@ DATEIAUSGABE – SEHR WICHTIG:
 1. Erstelle eine echte, herunterladbare UTF-8-Datei mit der Endung .json und dem MIME-Typ application/json.
 2. Benenne sie nach dem Muster „kartenwerk-kurztitel.json“. Verwende im Dateinamen nur Kleinbuchstaben, Zahlen und Bindestriche.
 3. Prüfe vor dem Bereitstellen, dass die Datei gültiges JSON enthält, alle Zeichen korrekt maskiert sind und nach dem jeweils letzten Element kein Komma steht.
-4. Stelle die fertige JSON-Datei als herunterladbaren Dateianhang beziehungsweise Download-Link bereit.
-5. Schreibe den JSON-Inhalt NICHT in den Chat, NICHT in einen Markdown-Codeblock und NICHT als Vorschau. Im Chat darf außer einem kurzen Hinweis auf die fertige Datei kein Karteninhalt erscheinen.
-6. Falls in dieser ChatGPT-Umgebung technisch keine Datei erstellt werden kann, gib nicht ersatzweise den JSON-Code im Chat aus, sondern teile nur knapp mit, dass keine Datei erzeugt werden konnte.
+4. Prüfe zusätzlich, dass jede Rückseite ein Array aus den oben erlaubten Inhaltsblöcken ist und keine Zeichenfolge \\n als sichtbarer Text vorkommt.
+5. Stelle die fertige JSON-Datei als herunterladbaren Dateianhang beziehungsweise Download-Link bereit.
+6. Schreibe den JSON-Inhalt NICHT in den Chat, NICHT in einen Markdown-Codeblock und NICHT als Vorschau. Im Chat darf außer einem kurzen Hinweis auf die fertige Datei kein Karteninhalt erscheinen.
+7. Falls in dieser ChatGPT-Umgebung technisch keine Datei erstellt werden kann, gib nicht ersatzweise den JSON-Code im Chat aus, sondern teile nur knapp mit, dass keine Datei erzeugt werden konnte.
 
 AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
 [TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
@@ -116,10 +140,11 @@ INHALTLICHE VORGABEN:
 2. Ordne die Karten in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
 3. Befolge bei Bildung, Reihenfolge und Anzahl der Karten strikt die Regeln des oben gewählten Aufbereitungsmodus.
 4. Formuliere die Vorderseite als eindeutige Frage oder präzisen Begriff.
-5. Formuliere die Rückseite als knappe, aber vollständige Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
-6. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
+5. Übertrage die sichtbare Struktur der Quelle: Absätze als normale Textzeilen, Stichpunkte als echte Listenzeilen und Tabellen als Markdown-Tabellen.
+6. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
+7. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
 
-Gib das Ergebnis direkt als reinen Text im Chat aus. Verwende exakt dieses Format:
+Gib das Ergebnis direkt als reinen Text im Chat aus. Verwende exakt dieses Grundformat:
 
 PROJEKT: Titel des Lernprojekts
 
@@ -128,11 +153,22 @@ PROJEKT: Titel des Lernprojekts
 THEMA: Name des Oberthemas
 VORDERSEITE: Frage oder Begriff
 RÜCKSEITE:
-Vollständige Erklärung
+Ein normaler Absatz.
+
+- Erster Stichpunkt
+- Zweiter Stichpunkt
+
+1. Erster nummerierter Schritt
+2. Zweiter nummerierter Schritt
+
+| Merkmal | Bedeutung |
+| --- | --- |
+| Beispiel A | Erklärung A |
+| Beispiel B | Erklärung B |
 
 §§§
 
-THEMA: Name des Oberthemas
+THEMA: Name des nächsten Oberthemas
 VORDERSEITE: Nächste Frage oder nächster Begriff
 RÜCKSEITE:
 Nächste Erklärung
@@ -141,7 +177,12 @@ FORMATREGELN:
 - Zwischen zwei Karten muss immer eine eigene Zeile mit genau drei Paragrafzeichen stehen: §§§
 - Vor und nach der Zeile mit §§§ muss jeweils eine Leerzeile stehen.
 - Wiederhole „THEMA:“ bei jeder Karte, auch wenn mehrere Karten zum selben Oberthema gehören.
-- Verwende keine Einleitung, keine Abschlussbemerkung, keine Aufzählung außerhalb der Karten und keine Markdown-Codeblöcke.
+- Erzeuge echte Zeilenumbrüche. Schreibe niemals die sichtbaren Zeichenfolgen \\n oder \\r in den Text.
+- Jeder Stichpunkt beginnt in einer eigenen Zeile mit „- “.
+- Jeder nummerierte Punkt beginnt in einer eigenen Zeile mit „1. “, „2. “ und so weiter.
+- Tabellen werden als Markdown-Tabelle mit senkrechten Strichen und einer Trennzeile aus Bindestrichen ausgegeben.
+- Nutze eine Tabelle nur, wenn die Quelle tatsächlich eine Tabelle oder klar tabellarische Gegenüberstellung enthält.
+- Verwende keine Einleitung, keine Abschlussbemerkung und keine Markdown-Codeblöcke.
 - In diesem Textmodus soll keine Datei erstellt werden.
 
 AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
@@ -391,7 +432,7 @@ function openInstructionsDialog() {
         </article>
       </div>
 
-      <div class="notice info"><strong>Empfehlung:</strong> JSON ist stabiler, weil Projekttitel, Oberthemen, Vorderseiten und Rückseiten eindeutig strukturiert sind.</div>
+      <div class="notice info"><strong>Empfehlung:</strong> JSON ist stabiler, weil Projekttitel, Oberthemen, Vorderseiten sowie Absätze, Listen und Tabellen eindeutig strukturiert sind.</div>
       <button class="button full-width" id="instructionCreateProject" type="button">Jetzt Projekt erstellen</button>
     </div>`;
 
@@ -495,8 +536,8 @@ function openCreateProjectDialog() {
               <button class="button ghost" id="copyPromptWithSourceButton" type="button">Prompt + Text kopieren</button>
             </div>
             <div class="notice info" id="formatNotice">${state.promptMode === 'json'
-              ? 'ChatGPT soll eine echte .json-Datei zum Herunterladen erstellen.'
-              : 'ChatGPT gibt kopierbaren Text mit §§§-Trennzeilen aus.'}</div>
+              ? 'ChatGPT erstellt eine .json-Datei mit getrennten Blöcken für Absätze, Listen und Tabellen.'
+              : 'ChatGPT gibt §§§-Text mit echten Zeilenumbrüchen, Listen und Markdown-Tabellen aus.'}</div>
           </div>
         </section>
 
@@ -571,8 +612,8 @@ function bindCreateDialogEvents() {
       document.querySelectorAll('[data-create-prompt-mode]').forEach((item) => item.classList.toggle('active', item === button));
       document.getElementById('promptPreview').textContent = getActivePrompt();
       document.getElementById('formatNotice').textContent = state.promptMode === 'json'
-        ? 'ChatGPT soll eine echte .json-Datei zum Herunterladen erstellen.'
-        : 'ChatGPT gibt kopierbaren Text mit §§§-Trennzeilen aus.';
+        ? 'ChatGPT erstellt eine .json-Datei mit getrennten Blöcken für Absätze, Listen und Tabellen.'
+        : 'ChatGPT gibt §§§-Text mit echten Zeilenumbrüchen, Listen und Markdown-Tabellen aus.';
       setImportTab(state.importTab);
     });
   });
@@ -1046,10 +1087,13 @@ function normalizeProject(input, titleOverride = '') {
     if (!section || typeof section !== 'object') return null;
     const cards = Array.isArray(section.cards) ? section.cards : [];
     const normalizedCards = cards.map((card) => {
-      const front = String(card?.front ?? card?.question ?? card?.title ?? '').trim();
-      const back = String(card?.back ?? card?.answer ?? card?.content ?? '').trim();
-      if (!front || !back) return null;
-      return { id: makeId('card'), front: front.slice(0, 500), back: back.slice(0, 12000) };
+      const front = (window.KartenWerkRichText?.decodeLineBreaks(card?.front ?? card?.question ?? card?.title ?? '') || '')
+        .replace(/\s*\n\s*/g, ' ')
+        .trim();
+      const rawBack = card?.back ?? card?.answer ?? card?.content ?? card?.blocks ?? '';
+      const back = window.KartenWerkRichText?.normalize(rawBack) || [];
+      if (!front || !window.KartenWerkRichText?.hasContent(back)) return null;
+      return { id: makeId('card'), front: front.slice(0, 500), back };
     }).filter(Boolean);
     if (!normalizedCards.length) return null;
     return {
@@ -1183,37 +1227,8 @@ function friendlyJsonError(message) {
   return message.replace(/^JSON\.parse:\s*/i, '').replace(/^Unexpected token.*?in JSON at position/i, 'Fehler an Zeichenposition');
 }
 
-function formatAnswer(text) {
-  const escaped = escapeHTML(text).replace(/\r\n/g, '\n');
-  const lines = escaped.split('\n');
-  let html = '';
-  let listType = null;
-
-  const closeList = () => {
-    if (listType) html += `</${listType}>`;
-    listType = null;
-  };
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    const bullet = line.match(/^[-•*]\s+(.+)/);
-    const numbered = line.match(/^\d+[.)]\s+(.+)/);
-
-    if (bullet) {
-      if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; }
-      html += `<li>${bullet[1]}</li>`;
-    } else if (numbered) {
-      if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; }
-      html += `<li>${numbered[1]}</li>`;
-    } else if (line) {
-      closeList();
-      html += `<p>${line}</p>`;
-    } else {
-      closeList();
-    }
-  }
-  closeList();
-  return html || '<p>Keine Erklärung vorhanden.</p>';
+function formatAnswer(content) {
+  return window.KartenWerkRichText?.render(content) || '<p>Keine Erklärung vorhanden.</p>';
 }
 
 function escapeHTML(value) {

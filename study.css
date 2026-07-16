@@ -124,7 +124,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid color-mix(in
   border-radius: clamp(18px, 4vw, 28px);
   background: transparent;
   cursor: pointer;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   -webkit-tap-highlight-color: transparent;
 }
 .session-card-inner {
@@ -173,12 +173,25 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid color-mix(in
 }
 .face-side { color: var(--muted); font-size: .72rem; font-weight: 800; white-space: nowrap; }
 .front-content, .answer-viewport {
-  display: grid;
   min-height: 0;
   flex: 1;
+}
+.front-content {
+  display: grid;
   place-items: center;
   overflow: hidden;
 }
+.answer-viewport {
+  display: block;
+  overflow: auto;
+  padding: 2px 3px 4px 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 55%, transparent) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.answer-viewport::-webkit-scrollbar { width: 5px; height: 5px; }
+.answer-viewport::-webkit-scrollbar-thumb { border-radius: 999px; background: color-mix(in srgb, var(--primary) 48%, transparent); }
 .front-title {
   width: 100%;
   max-height: 100%;
@@ -192,8 +205,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid color-mix(in
 }
 .answer-content {
   width: 100%;
-  max-height: 100%;
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
   font-size: clamp(.92rem, 2.7vw, 1.24rem);
   line-height: 1.46;
   text-align: left;
@@ -202,7 +215,55 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid color-mix(in
 .answer-content p { margin: 0 0 .75em; }
 .answer-content p:last-child { margin-bottom: 0; }
 .answer-content ul, .answer-content ol { margin: .3em 0 .7em; padding-left: 1.25em; }
-.answer-content li + li { margin-top: .26em; }
+.answer-content li + li { margin-top: .34em; }
+.answer-content .rich-list { padding-left: 1.35em; }
+.answer-content .rich-list li { padding-left: .12em; }
+.rich-heading {
+  margin: .25em 0 .55em;
+  font-size: 1.08em;
+  line-height: 1.25;
+}
+.rich-table-scroll {
+  width: 100%;
+  margin: .55em 0 .85em;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+}
+.rich-table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+  font-size: .88em;
+  line-height: 1.32;
+  text-align: left;
+}
+.rich-table th,
+.rich-table td {
+  min-width: 8.5em;
+  max-width: 21em;
+  padding: .62em .7em;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.rich-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--primary-soft);
+  color: var(--text);
+  font-weight: 850;
+}
+.rich-table tr:last-child td { border-bottom: 0; }
+.rich-table th:last-child,
+.rich-table td:last-child { border-right: 0; }
 .face-hint {
   flex: 0 0 auto;
   margin-top: 8px;

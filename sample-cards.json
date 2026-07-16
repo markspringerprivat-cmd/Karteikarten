@@ -1,29 +1,71 @@
 {
-  "projectTitle": "Beispielprojekt: Lernpsychologie",
+  "projectTitle": "Beispielprojekt: Forschungsmethoden",
   "sections": [
     {
       "title": "Grundbegriffe",
       "cards": [
         {
-          "front": "Was ist Lernen?",
-          "back": "Lernen bezeichnet eine relativ dauerhafte Veränderung von Wissen, Fähigkeiten oder Verhalten, die auf Erfahrung beruht."
+          "front": "Was umfasst ein Forschungsdesign?",
+          "back": [
+            {
+              "type": "paragraph",
+              "text": "Ein Forschungsdesign beschreibt die grundlegenden Entscheidungen über das Vorgehen bei einer empirischen Untersuchung."
+            },
+            {
+              "type": "list",
+              "style": "unordered",
+              "items": [
+                "Festlegung der Analyseebene",
+                "Auswahl der Datenerhebung und Datenauswertung",
+                "Entscheidung über Quer-, Trend- oder Panelstudie"
+              ]
+            }
+          ]
         },
         {
-          "front": "Was bedeutet Motivation?",
-          "back": "Motivation beschreibt Prozesse, die Verhalten auslösen, ausrichten und aufrechterhalten."
+          "front": "Welche Zeitdimensionen können Untersuchungen haben?",
+          "back": [
+            {
+              "type": "table",
+              "headers": [
+                "Design",
+                "Kennzeichen"
+              ],
+              "rows": [
+                [
+                  "Querschnitt",
+                  "Messung zu einem Zeitpunkt"
+                ],
+                [
+                  "Trendstudie",
+                  "Wiederholte Messungen verschiedener Stichproben"
+                ],
+                [
+                  "Panelstudie",
+                  "Wiederholte Messungen derselben Untersuchungseinheiten"
+                ]
+              ]
+            }
+          ]
         }
       ]
     },
     {
-      "title": "Gedächtnis",
+      "title": "Datenebenen",
       "cards": [
         {
-          "front": "Arbeitsgedächtnis",
-          "back": "Das Arbeitsgedächtnis hält Informationen kurzfristig verfügbar und verarbeitet sie aktiv. Seine Kapazität ist begrenzt."
-        },
-        {
-          "front": "Langzeitgedächtnis",
-          "back": "Das Langzeitgedächtnis speichert Informationen über längere Zeiträume. Dazu gehören deklaratives und nichtdeklaratives Wissen."
+          "front": "Was sind Aggregatdaten?",
+          "back": [
+            {
+              "type": "list",
+              "style": "unordered",
+              "items": [
+                "Daten auf Regional- oder Länderebene",
+                "Sie können von Institutionen und Datenbanken bereitgestellt werden",
+                "Sie können durch Aggregation von Individualdaten entstehen"
+              ]
+            }
+          ]
         }
       ]
     }
