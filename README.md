@@ -1,10 +1,11 @@
 # KartenWerk
 
-KartenWerk ist eine vollständig statische Karteikarten-Webanwendung. Ein mitgelieferter Prompt lässt ChatGPT Lerntexte in ein klar definiertes JSON-Format umwandeln. Die Ausgabe kann anschließend eingefügt oder als Datei hochgeladen werden.
+KartenWerk ist eine vollständig statische Karteikarten-Webanwendung. Ein mitgelieferter Prompt verarbeitet direkt eingefügten Text ebenso wie angehängte PDFs, Dokumente, Präsentationen oder Bilddateien. Im empfohlenen JSON-Modus fordert der Prompt ChatGPT auf, eine echte herunterladbare `.json`-Datei zu erzeugen, die anschließend hochgeladen wird.
 
 ## Funktionen
 
-- vorbereiteter ChatGPT-Prompt
+- vorbereiteter ChatGPT-Prompt für Anhänge und direkt eingefügten Text
+- verbindliche Erzeugung einer herunterladbaren JSON-Datei im JSON-Modus
 - empfohlener JSON-Import
 - zusätzlicher Textimport mit `§§§` als Kartentrenner
 - automatische Projekt- und Themenstruktur
@@ -16,6 +17,22 @@ KartenWerk ist eine vollständig statische Karteikarten-Webanwendung. Ein mitgel
 - Einzelprojekt-Export und Gesamtsicherung
 - responsive Darstellung und Dunkelmodus
 - keine externen Bibliotheken, kein Server und keine Anmeldung
+
+## Verwendung mit ChatGPT
+
+### JSON-Modus – empfohlen
+
+1. Den JSON-Prompt in KartenWerk kopieren.
+2. Den Prompt in ChatGPT einfügen.
+3. Den Lerntext entweder direkt unter den Prompt setzen oder PDF-, Word-, PowerPoint-, Text- beziehungsweise Bilddateien an die Nachricht anhängen.
+4. ChatGPT soll eine echte Datei nach dem Muster `kartenwerk-kurztitel.json` erstellen. Der JSON-Inhalt soll nicht im Chat erscheinen.
+5. Die heruntergeladene Datei in KartenWerk unter **Datei hochladen** importieren.
+
+Der Prompt weist ChatGPT ausdrücklich an, bei fehlender technischer Dateierstellung nicht ersatzweise den gesamten JSON-Code in den Chat zu schreiben.
+
+### §§§-Textmodus
+
+Bei diesem alternativen Weg wird das Ergebnis absichtlich als Text im Chat ausgegeben. Der Text kann kopiert und in KartenWerk unter **Text einfügen** importiert werden.
 
 ## GitHub Pages veröffentlichen
 

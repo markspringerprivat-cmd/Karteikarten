@@ -4,18 +4,26 @@ const STORAGE_KEY = 'kartenwerk.projects.v1';
 const THEME_KEY = 'kartenwerk.theme.v1';
 const APP_VERSION = 1;
 
-const JSON_PROMPT = `Erstelle aus dem nachfolgenden Text einen vollständigen, karteikartengerechten Lernkartensatz.
+const JSON_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen, karteikartengerechten Lernkartensatz für die Webanwendung „KartenWerk“.
 
-Vorgaben:
-1. Ordne den Inhalt zuerst in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
-2. Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karteikarte.
-3. Die Vorderseite ("front") enthält eine eindeutige Frage oder einen präzisen Begriff.
-4. Die Rückseite ("back") enthält eine verständliche, fachlich korrekte und lernbare Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele sollen erhalten bleiben.
-5. Teile überladene Inhalte auf mehrere Karten auf. Vermeide aber unnötige Wiederholungen.
-6. Verwende ausschließlich Informationen aus dem Ausgangstext. Erfinde nichts hinzu.
-7. Formuliere knapp, aber vollständig. Zeilenumbrüche innerhalb einer Antwort dürfen als \\n angegeben werden.
-8. Gib ausschließlich gültiges JSON aus: keine Einleitung, keine Erklärungen, keine Markdown-Codeblöcke und keine Kommentare.
-9. Halte dich exakt an dieses Schema und verwende keine zusätzlichen Schlüssel:
+QUELLE ERKENNEN:
+- Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen.
+- Sie kann alternativ direkt unter „AUSGANGSTEXT“ in diese Nachricht eingefügt sein.
+- Falls Anhänge und eingefügter Text vorhanden sind, berücksichtige beides gemeinsam, sofern nichts anderes angegeben ist.
+- Falls mehrere Dateien angehängt sind, werte alle relevanten Dateien gemeinsam aus.
+- Verwende ausschließlich Informationen aus der bereitgestellten Quelle. Erfinde, ergänze oder recherchiere nichts.
+
+INHALTLICHE VORGABEN:
+1. Bestimme einen aussagekräftigen Titel für das gesamte Lernprojekt.
+2. Ordne den Inhalt in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
+3. Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karteikarte.
+4. Die Vorderseite „front“ enthält eine eindeutige Frage oder einen präzisen Begriff.
+5. Die Rückseite „back“ enthält eine verständliche, fachlich korrekte und lernbare Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
+6. Teile überladene Inhalte auf mehrere Karten auf, vermeide aber unnötige Wiederholungen.
+7. Formuliere knapp, aber vollständig. Zeilenumbrüche innerhalb einer Rückseite dürfen als \\n gespeichert werden.
+
+VERBINDLICHES DATEIFORMAT:
+Erstelle den Inhalt exakt nach diesem JSON-Schema und verwende keine zusätzlichen Schlüssel:
 
 {
   "projectTitle": "Aussagekräftiger Titel des Lernprojekts",
@@ -32,16 +40,35 @@ Vorgaben:
   ]
 }
 
-10. Achte auf korrekt gesetzte doppelte Anführungszeichen, gültige JSON-Syntax und darauf, dass nach dem letzten Element kein Komma steht.
+DATEIAUSGABE – SEHR WICHTIG:
+1. Erstelle eine echte, herunterladbare UTF-8-Datei mit der Endung .json und dem MIME-Typ application/json.
+2. Benenne sie nach dem Muster „kartenwerk-kurztitel.json“. Verwende im Dateinamen nur Kleinbuchstaben, Zahlen und Bindestriche.
+3. Prüfe vor dem Bereitstellen, dass die Datei gültiges JSON enthält, alle Zeichen korrekt maskiert sind und nach dem jeweils letzten Element kein Komma steht.
+4. Stelle die fertige JSON-Datei als herunterladbaren Dateianhang beziehungsweise Download-Link bereit.
+5. Schreibe den JSON-Inhalt NICHT in den Chat, NICHT in einen Markdown-Codeblock und NICHT als Vorschau. Im Chat darf außer einem kurzen Hinweis auf die fertige Datei kein Karteninhalt erscheinen.
+6. Falls in dieser ChatGPT-Umgebung technisch keine Datei erstellt werden kann, gib nicht ersatzweise den JSON-Code im Chat aus, sondern teile nur knapp mit, dass keine Datei erzeugt werden konnte.
 
-AUSGANGSTEXT:
-[TEXT ODER LERNZETTEL HIER EINFÜGEN]`;
+AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
+[TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
 
-const DELIMITER_PROMPT = `Erstelle aus dem nachfolgenden Text einen vollständigen, karteikartengerechten Lernkartensatz.
+const DELIMITER_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen, karteikartengerechten Lernkartensatz für die Webanwendung „KartenWerk“.
 
-Ordne die Karten in sinnvolle Oberthemen. Erfinde keine Informationen hinzu. Jede Karte soll nur ein klar abgrenzbares Konzept behandeln. Formuliere die Vorderseite als eindeutige Frage oder präzisen Begriff und die Rückseite als knappe, aber vollständige Erklärung.
+QUELLE ERKENNEN:
+- Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen.
+- Sie kann alternativ direkt unter „AUSGANGSTEXT“ in diese Nachricht eingefügt sein.
+- Falls Anhänge und eingefügter Text vorhanden sind, berücksichtige beides gemeinsam, sofern nichts anderes angegeben ist.
+- Falls mehrere Dateien angehängt sind, werte alle relevanten Dateien gemeinsam aus.
+- Verwende ausschließlich Informationen aus der bereitgestellten Quelle. Erfinde, ergänze oder recherchiere nichts.
 
-Gib ausschließlich das folgende Textformat aus:
+INHALTLICHE VORGABEN:
+1. Bestimme einen aussagekräftigen Titel für das gesamte Lernprojekt.
+2. Ordne die Karten in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
+3. Jede Karte soll genau ein klar abgrenzbares Konzept behandeln.
+4. Formuliere die Vorderseite als eindeutige Frage oder präzisen Begriff.
+5. Formuliere die Rückseite als knappe, aber vollständige Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
+6. Teile überladene Inhalte auf mehrere Karten auf und vermeide unnötige Wiederholungen.
+
+Gib das Ergebnis direkt als reinen Text im Chat aus. Verwende exakt dieses Format:
 
 PROJEKT: Titel des Lernprojekts
 
@@ -59,15 +86,19 @@ VORDERSEITE: Nächste Frage oder nächster Begriff
 RÜCKSEITE:
 Nächste Erklärung
 
-Zwischen zwei Karten muss immer eine eigene Zeile mit genau drei Paragrafzeichen stehen: §§§
-Keine Einleitung, keine Abschlussbemerkung und keine Markdown-Codeblöcke ausgeben.
+FORMATREGELN:
+- Zwischen zwei Karten muss immer eine eigene Zeile mit genau drei Paragrafzeichen stehen: §§§
+- Vor und nach der Zeile mit §§§ muss jeweils eine Leerzeile stehen.
+- Wiederhole „THEMA:“ bei jeder Karte, auch wenn mehrere Karten zum selben Oberthema gehören.
+- Verwende keine Einleitung, keine Abschlussbemerkung, keine Aufzählung außerhalb der Karten und keine Markdown-Codeblöcke.
+- In diesem Textmodus soll keine Datei erstellt werden.
 
-AUSGANGSTEXT:
-[TEXT ODER LERNZETTEL HIER EINFÜGEN]`;
+AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
+[TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
 
 const state = {
   projects: loadProjects(),
-  importTab: 'paste',
+  importTab: 'file',
   promptMode: 'json',
   study: {
     projectId: null,
@@ -159,12 +190,12 @@ function renderDashboard() {
           <h2>So funktioniert es</h2>
           <p>Drei Schritte ohne Server oder Datenbank.</p>
           <div class="flow-list">
-            <div class="flow-item"><span class="flow-number">1</span><div><strong>Prompt kopieren</strong><small>Mit deinem Lerntext an ChatGPT senden</small></div></div>
-            <div class="flow-item"><span class="flow-number">2</span><div><strong>Ausgabe importieren</strong><small>Einfügen oder JSON-Datei hochladen</small></div></div>
+            <div class="flow-item"><span class="flow-number">1</span><div><strong>Prompt kopieren</strong><small>Mit Text oder angehängten Dateien an ChatGPT senden</small></div></div>
+            <div class="flow-item"><span class="flow-number">2</span><div><strong>Ergebnis importieren</strong><small>JSON-Datei hochladen oder Text einfügen</small></div></div>
             <div class="flow-item"><span class="flow-number">3</span><div><strong>Lernen</strong><small>Nach Themen filtern und Karten abfragen</small></div></div>
           </div>
         </div>
-        <div class="notice info">Empfohlen: JSON. Das Format ist stabiler und lässt sich fehlerärmer auslesen.</div>
+        <div class="notice info">Empfohlen: JSON. Der Prompt verlangt eine echte Download-Datei, die anschließend hier hochgeladen wird.</div>
       </aside>
     </section>
 
@@ -173,7 +204,7 @@ function renderDashboard() {
         <div class="panel-header">
           <div>
             <h2>1. ChatGPT-Prompt</h2>
-            <p>Der Prompt enthält bereits das vollständige Import-Schema.</p>
+            <p>Der Prompt erkennt Dateianhänge und eingefügten Text. Im JSON-Modus verlangt er eine echte Download-Datei.</p>
           </div>
         </div>
         <div class="import-tabs" role="tablist" aria-label="Promptformat">
@@ -181,9 +212,12 @@ function renderDashboard() {
           <button class="tab-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-prompt-mode="delimiter" type="button">§§§ · Textformat</button>
         </div>
         <pre class="prompt-preview" id="promptPreview">${escapeHTML(prompt)}</pre>
+        <div class="notice info">${state.promptMode === 'json'
+          ? 'Erwartetes Ergebnis: eine herunterladbare .json-Datei. Diese Datei anschließend rechts unter „Datei hochladen“ auswählen.'
+          : 'Erwartetes Ergebnis: reiner Chattext mit §§§-Trennzeilen. Diesen Text anschließend rechts einfügen.'}</div>
         <div class="button-row">
           <button class="button" id="copyPromptButton" type="button">Prompt kopieren</button>
-          <button class="button ghost" id="copyPromptWithSourceButton" type="button">Prompt + eigenen Text kopieren</button>
+          <button class="button ghost" id="copyPromptWithSourceButton" type="button">Prompt + Text kopieren</button>
         </div>
       </article>
 
@@ -196,15 +230,15 @@ function renderDashboard() {
         </div>
         <div class="field">
           <label class="label" for="projectTitleOverride">Projektname <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
-          <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Überschreibt den Titel aus der ChatGPT-Ausgabe">
+          <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Überschreibt den importierten Projekttitel">
         </div>
         <div class="import-tabs" role="tablist" aria-label="Importart">
           <button class="tab-button ${state.importTab === 'paste' ? 'active' : ''}" data-import-tab="paste" type="button">Text einfügen</button>
           <button class="tab-button ${state.importTab === 'file' ? 'active' : ''}" data-import-tab="file" type="button">Datei hochladen</button>
         </div>
         <div id="pasteImport" class="${state.importTab === 'paste' ? '' : 'hidden'}">
-          <label class="label" for="importText">ChatGPT-Ausgabe</label>
-          <textarea class="textarea" id="importText" spellcheck="false" placeholder='JSON oder Text mit §§§-Trennzeichen hier einfügen …'></textarea>
+          <label class="label" for="importText">ChatGPT-Textausgabe</label>
+          <textarea class="textarea" id="importText" spellcheck="false" placeholder='Optional: JSON-Inhalt oder Text mit §§§-Trennzeichen hier einfügen …'></textarea>
           <div class="button-row">
             <button class="button ghost" id="pasteClipboardButton" type="button">Aus Zwischenablage einfügen</button>
             <button class="button" id="importTextButton" type="button">Projekt erstellen</button>
@@ -240,7 +274,7 @@ function renderDashboard() {
 
 function renderProjectCards() {
   if (!state.projects.length) {
-    return `<div class="empty-state"><strong>Noch kein Projekt vorhanden</strong>Importiere oben deine erste ChatGPT-Ausgabe.</div>`;
+    return `<div class="empty-state"><strong>Noch kein Projekt vorhanden</strong>Importiere oben deinen ersten Kartensatz.</div>`;
   }
 
   return state.projects
@@ -269,6 +303,7 @@ function bindDashboardEvents() {
   document.querySelectorAll('[data-prompt-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       state.promptMode = button.dataset.promptMode;
+      state.importTab = state.promptMode === 'json' ? 'file' : 'paste';
       renderDashboard();
     });
   });
@@ -291,7 +326,7 @@ function bindDashboardEvents() {
     const source = window.prompt('Füge deinen Ausgangstext ein. Er wird nur für den kopierten Prompt verwendet:');
     if (source === null) return;
     const base = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
-    const combined = base.replace('[TEXT ODER LERNZETTEL HIER EINFÜGEN]', source.trim());
+    const combined = base.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, source.trim());
     await copyText(combined);
     toast('Prompt mit Text kopiert', 'Der vollständige Auftrag liegt in der Zwischenablage.');
   });
@@ -574,7 +609,7 @@ function importFile(file) {
 
 function importProjectText(raw, titleOverride = '') {
   if (!raw.trim()) {
-    toast('Kein Inhalt', 'Füge zuerst eine ChatGPT-Ausgabe ein.');
+    toast('Kein Inhalt', 'Füge zuerst eine ChatGPT-Textausgabe ein.');
     return;
   }
 
