@@ -4,6 +4,57 @@ const STORAGE_KEY = 'kartenwerk.projects.v1';
 const THEME_KEY = 'kartenwerk.theme.v1';
 const APP_VERSION = 1;
 
+const CARD_CREATION_MODES = {
+  normal: {
+    label: 'Normal',
+    short: 'So nah wie möglich an der Quelle',
+    infoTitle: 'Normaler Modus',
+    infoText: 'Die Karten übernehmen Fachbegriffe, Definitionen und Formulierungen möglichst wortlautnah. Die KI darf nur minimal kürzen oder grammatisch an Frage und Antwort anpassen. Synonyme, Vereinfachungen und freie Umschreibungen sollen vermieden werden.',
+    prompt: `NORMALER MODUS – VERBINDLICH:
+- Orientiere jede Karte so nah wie möglich am genauen Wortlaut der Quelle.
+- Übernimm Fachbegriffe, Definitionen, Kernaussagen, Aufzählungen und charakteristische Formulierungen möglichst wörtlich.
+- Verwende keine Synonyme, wenn der ursprüngliche Begriff aus der Quelle übernommen werden kann.
+- Formuliere Inhalte nicht frei um und vereinfache sie nicht eigenständig.
+- Erlaubt sind nur minimale grammatische Anpassungen, die nötig sind, um aus dem Quelleninhalt eine eindeutige Vorderseite und eine lesbare Rückseite zu bilden.
+- Kürzungen dürfen nur durch das Weglassen unwesentlicher Wiederholungen erfolgen; der verbleibende Inhalt soll sprachlich möglichst unverändert bleiben.
+- Ergänze keine Erklärungen, Beispiele, Bewertungen oder Informationen, die nicht ausdrücklich in der Quelle stehen.
+- Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karte.
+- Teile überladene Inhalte auf mehrere Karten auf, ohne den verbleibenden Wortlaut unnötig umzuschreiben.`
+  },
+  advanced: {
+    label: 'Advanced',
+    short: 'Leicht verständlich erklärt',
+    infoTitle: 'Advanced-Modus',
+    infoText: 'Die KI bereitet den Quelleninhalt verständlicher auf, erklärt schwierige Begriffe und nutzt klarere Sätze. Sie darf umformulieren, aber keine neuen Fachinformationen oder fremden Beispiele ergänzen.',
+    prompt: `ADVANCED-MODUS – VERBINDLICH:
+- Bereite die Inhalte leicht verständlich, klar und lernfreundlich auf.
+- Erkläre schwierige Fachbegriffe kurz in ihrem jeweiligen Zusammenhang.
+- Löse unnötig komplizierte Satzstrukturen auf und formuliere verständlicher, ohne den fachlichen Sinn zu verändern.
+- Du darfst den Wortlaut der Quelle behutsam umformulieren, musst aber alle zentralen Fachbegriffe und Kernaussagen erhalten.
+- Ergänze keine externen Informationen, keine recherchierten Inhalte und keine Beispiele, die nicht aus der Quelle hervorgehen.
+- Falls die Quelle selbst Beispiele, Abgrenzungen oder Zusammenhänge enthält, nutze sie zur verständlichen Erklärung.
+- Kennzeichne Unsicherheiten der Quelle nicht durch erfundene Präzisierungen.
+- Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karte.
+- Teile überladene Inhalte auf mehrere überschaubare Karten auf und vermeide unnötige Wiederholungen.`
+  },
+  slides: {
+    label: 'Folienmodus',
+    short: 'Genau eine Karte pro Folie',
+    infoTitle: 'Folienmodus',
+    infoText: 'Dieser Modus ist für PowerPoint- oder folienartige PDF-Dateien gedacht. Jede Folie wird in der ursprünglichen Reihenfolge zu genau einer Karte. Folien werden weder zusammengelegt noch auf mehrere Karten verteilt.',
+    prompt: `FOLIENMODUS – VERBINDLICH:
+- Dieser Modus ist vor allem für PowerPoint-Präsentationen und folienartige PDF-Dateien bestimmt.
+- Erstelle für jede einzelne Folie beziehungsweise PDF-Seite genau eine Karteikarte und bewahre die ursprüngliche Reihenfolge vollständig.
+- Lege niemals mehrere Folien zu einer Karte zusammen und teile niemals eine Folie auf mehrere Karten auf.
+- Auch Titel-, Inhaltsverzeichnis-, Übergangs- und Abschlussfolien werden als eigene Karte übernommen, sofern sie Bestandteil der Quelle sind.
+- Die Vorderseite enthält vorrangig den exakten Folientitel. Hat eine Folie keinen erkennbaren Titel, verwende „Folie X“ mit der tatsächlichen Foliennummer.
+- Die Rückseite enthält den gesamten inhaltlich relevanten Text dieser Folie in seiner ursprünglichen Reihenfolge. Aufzählungen und Fachbegriffe sollen möglichst wortlautnah erhalten bleiben.
+- Bei Diagrammen, Tabellen oder Abbildungen übernimm nur eindeutig erkennbare Beschriftungen, Werte und Aussagen. Erfinde keine Interpretation.
+- Bilde die Oberthemen aus vorhandenen Präsentationsabschnitten oder erkennbaren thematischen Blöcken, ohne zusätzliche Karten zu erzeugen.
+- Die Anzahl der Karten muss exakt der Anzahl der Folien beziehungsweise Seiten entsprechen.`
+  }
+};
+
 const JSON_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen, karteikartengerechten Lernkartensatz für die Webanwendung „KartenWerk“.
 
 QUELLE ERKENNEN:
@@ -16,10 +67,10 @@ QUELLE ERKENNEN:
 INHALTLICHE VORGABEN:
 1. Bestimme einen aussagekräftigen Titel für das gesamte Lernprojekt.
 2. Ordne den Inhalt in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
-3. Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karteikarte.
+3. Befolge bei Bildung, Reihenfolge und Anzahl der Karten strikt die Regeln des oben gewählten Aufbereitungsmodus.
 4. Die Vorderseite „front“ enthält eine eindeutige Frage oder einen präzisen Begriff.
 5. Die Rückseite „back“ enthält eine verständliche, fachlich korrekte und lernbare Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
-6. Teile überladene Inhalte auf mehrere Karten auf, vermeide aber unnötige Wiederholungen.
+6. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
 7. Formuliere knapp, aber vollständig. Zeilenumbrüche innerhalb einer Rückseite dürfen als \\n gespeichert werden.
 
 VERBINDLICHES DATEIFORMAT:
@@ -63,10 +114,10 @@ QUELLE ERKENNEN:
 INHALTLICHE VORGABEN:
 1. Bestimme einen aussagekräftigen Titel für das gesamte Lernprojekt.
 2. Ordne die Karten in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
-3. Jede Karte soll genau ein klar abgrenzbares Konzept behandeln.
+3. Befolge bei Bildung, Reihenfolge und Anzahl der Karten strikt die Regeln des oben gewählten Aufbereitungsmodus.
 4. Formuliere die Vorderseite als eindeutige Frage oder präzisen Begriff.
 5. Formuliere die Rückseite als knappe, aber vollständige Erklärung. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
-6. Teile überladene Inhalte auf mehrere Karten auf und vermeide unnötige Wiederholungen.
+6. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
 
 Gib das Ergebnis direkt als reinen Text im Chat aus. Verwende exakt dieses Format:
 
@@ -100,6 +151,7 @@ const state = {
   projects: loadProjects(),
   importTab: 'file',
   promptMode: 'json',
+  generationMode: 'normal',
   study: {
     projectId: null,
     section: 'all',
@@ -114,6 +166,7 @@ const themeToggle = document.getElementById('themeToggle');
 const homeButton = document.getElementById('homeButton');
 const confirmDialog = document.getElementById('confirmDialog');
 const appDialog = document.getElementById('appDialog');
+const modeInfoDialog = document.getElementById('modeInfoDialog');
 
 init();
 
@@ -137,6 +190,12 @@ function bindGlobalEvents() {
 
   appDialog.addEventListener('click', (event) => {
     if (event.target === appDialog) appDialog.close();
+  });
+
+  modeInfoDialog.addEventListener('click', (event) => {
+    if (event.target === modeInfoDialog || event.target.closest('[data-close-mode-info]')) {
+      modeInfoDialog.close();
+    }
   });
 
 }
@@ -320,7 +379,7 @@ function openInstructionsDialog() {
       <div class="instruction-list">
         <article class="instruction-card">
           <span>1</span>
-          <div><h3>Prompt kopieren</h3><p>Öffne über die Plus-Kachel den Projektassistenten. Wähle JSON oder §§§ und kopiere den vorbereiteten Prompt.</p></div>
+          <div><h3>Prompt kopieren</h3><p>Öffne über die Plus-Kachel den Projektassistenten. Wähle Normal, Advanced oder Folienmodus, entscheide dich für JSON oder §§§ und kopiere den passenden Prompt.</p></div>
         </article>
         <article class="instruction-card">
           <span>2</span>
@@ -341,8 +400,52 @@ function openInstructionsDialog() {
   document.getElementById('instructionCreateProject').addEventListener('click', () => openCreateProjectDialog());
 }
 
+function getActivePrompt() {
+  const basePrompt = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+  const mode = CARD_CREATION_MODES[state.generationMode] || CARD_CREATION_MODES.normal;
+  return basePrompt.replace('INHALTLICHE VORGABEN:', `AUFBEREITUNGSMODUS: ${mode.label.toUpperCase()}\n${mode.prompt}\n\nINHALTLICHE VORGABEN:`);
+}
+
+function renderPromptModeOptions() {
+  return Object.entries(CARD_CREATION_MODES).map(([key, mode]) => `
+    <div class="prompt-mode-option ${state.generationMode === key ? 'active' : ''}">
+      <button class="prompt-mode-select" data-generation-mode="${key}" type="button" role="radio" aria-checked="${state.generationMode === key}">
+        <span class="prompt-mode-radio" aria-hidden="true"></span>
+        <span class="prompt-mode-copy"><strong>${escapeHTML(mode.label)}</strong><small>${escapeHTML(mode.short)}</small></span>
+      </button>
+      <button class="prompt-mode-help" data-mode-info="${key}" type="button" aria-label="${escapeHTML(mode.label)} erklären" title="Modus erklären">?</button>
+    </div>`).join('');
+}
+
+function updatePromptModeSelection() {
+  document.querySelectorAll('.prompt-mode-option').forEach((option) => {
+    const button = option.querySelector('[data-generation-mode]');
+    const active = button?.dataset.generationMode === state.generationMode;
+    option.classList.toggle('active', active);
+    button?.setAttribute('aria-checked', String(active));
+  });
+}
+
+function openModeInfoDialog(modeKey) {
+  const mode = CARD_CREATION_MODES[modeKey];
+  if (!mode) return;
+  modeInfoDialog.innerHTML = `
+    <div class="mode-info-card">
+      <header class="mode-info-header">
+        <div>
+          <p class="eyebrow">Aufbereitungsmodus</p>
+          <h2 id="modeInfoTitle">${escapeHTML(mode.infoTitle)}</h2>
+        </div>
+        <button class="dialog-close" data-close-mode-info type="button" aria-label="Schließen">×</button>
+      </header>
+      <p>${escapeHTML(mode.infoText)}</p>
+      <button class="button full-width" data-close-mode-info type="button">Verstanden</button>
+    </div>`;
+  if (!modeInfoDialog.open) modeInfoDialog.showModal();
+}
+
 function openCreateProjectDialog() {
-  const prompt = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+  const prompt = getActivePrompt();
   appDialog.className = 'app-dialog create-dialog';
   appDialog.innerHTML = `
     <div class="app-dialog-card create-dialog-card">
@@ -358,11 +461,23 @@ function openCreateProjectDialog() {
         <section class="flow-step">
           <div class="flow-step-number">1</div>
           <div class="flow-step-content">
-            <h3>Ausgabeformat wählen</h3>
-            <p>JSON ist der zuverlässigste Weg. Der alternative Textmodus verwendet §§§ als Kartentrenner.</p>
-            <div class="format-choice" role="group" aria-label="Ausgabeformat">
-              <button class="choice-button ${state.promptMode === 'json' ? 'active' : ''}" data-create-prompt-mode="json" type="button">JSON-Datei</button>
-              <button class="choice-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-create-prompt-mode="delimiter" type="button">§§§-Text</button>
+            <h3>Modus und Ausgabe wählen</h3>
+            <p>Der gewählte Modus bestimmt, wie ChatGPT deine Quelle in Karten umwandelt. Ein Modus muss aktiv sein.</p>
+
+            <fieldset class="prompt-mode-fieldset">
+              <legend>Modus</legend>
+              <div class="prompt-mode-list" role="radiogroup" aria-label="Aufbereitungsmodus">
+                ${renderPromptModeOptions()}
+              </div>
+            </fieldset>
+
+            <div class="output-format-block">
+              <span class="mini-label">Ausgabeformat</span>
+              <p>JSON ist der zuverlässigste Weg. Der alternative Textmodus verwendet §§§ als Kartentrenner.</p>
+              <div class="format-choice" role="group" aria-label="Ausgabeformat">
+                <button class="choice-button ${state.promptMode === 'json' ? 'active' : ''}" data-create-prompt-mode="json" type="button">JSON-Datei</button>
+                <button class="choice-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-create-prompt-mode="delimiter" type="button">§§§-Text</button>
+              </div>
             </div>
 
             <details class="prompt-details">
@@ -434,12 +549,27 @@ function openCreateProjectDialog() {
 }
 
 function bindCreateDialogEvents() {
+  document.querySelectorAll('[data-generation-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.generationMode = button.dataset.generationMode;
+      updatePromptModeSelection();
+      document.getElementById('promptPreview').textContent = getActivePrompt();
+    });
+  });
+
+  document.querySelectorAll('[data-mode-info]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openModeInfoDialog(button.dataset.modeInfo);
+    });
+  });
+
   document.querySelectorAll('[data-create-prompt-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       state.promptMode = button.dataset.createPromptMode;
       state.importTab = state.promptMode === 'json' ? 'file' : 'paste';
       document.querySelectorAll('[data-create-prompt-mode]').forEach((item) => item.classList.toggle('active', item === button));
-      document.getElementById('promptPreview').textContent = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+      document.getElementById('promptPreview').textContent = getActivePrompt();
       document.getElementById('formatNotice').textContent = state.promptMode === 'json'
         ? 'ChatGPT soll eine echte .json-Datei zum Herunterladen erstellen.'
         : 'ChatGPT gibt kopierbaren Text mit §§§-Trennzeilen aus.';
@@ -452,7 +582,7 @@ function bindCreateDialogEvents() {
   });
 
   document.getElementById('copyPromptButton').addEventListener('click', async () => {
-    await copyText(state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT);
+    await copyText(getActivePrompt());
     toast('Prompt kopiert', 'Du kannst ihn jetzt in ChatGPT einfügen.');
   });
 
@@ -462,7 +592,7 @@ function bindCreateDialogEvents() {
       toast('Kein Ausgangstext', 'Füge zuerst Text ein oder nutze „Prompt kopieren“ für einen Dateianhang.');
       return;
     }
-    const base = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+    const base = getActivePrompt();
     const combined = base.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, source);
     await copyText(combined);
     toast('Prompt mit Text kopiert', 'Der vollständige Auftrag liegt in der Zwischenablage.');

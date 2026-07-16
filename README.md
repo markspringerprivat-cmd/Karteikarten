@@ -17,17 +17,28 @@ Auf Smartphones stehen die drei Systemkacheln immer gemeinsam in der ersten Reih
 
 Die frühere lange Hauptseite wurde in einen geführten Drei-Schritt-Dialog verschoben:
 
-1. JSON-Datei oder `§§§`-Textformat auswählen und den vorbereiteten Prompt kopieren.
+1. Einen Aufbereitungsmodus auswählen, anschließend JSON-Datei oder `§§§`-Textformat festlegen und den passenden Prompt kopieren.
 2. Den Prompt mit angehängten PDF-, Word-, PowerPoint-, Text- oder Bilddateien beziehungsweise direkt eingefügtem Text an ChatGPT senden.
 3. Die erzeugte JSON-/TXT-Datei hochladen oder die Textausgabe einfügen.
 
 Nach einem erfolgreichen Import schließt sich der Assistent. Das neue Projekt erscheint anschließend als Kachel auf der Startseite.
+
+### Aufbereitungsmodi
+
+Im ersten Schritt des Projektassistenten muss einer von drei Modi ausgewählt werden:
+
+- **Normal** – übernimmt Fachbegriffe, Definitionen und Formulierungen so nah wie möglich am Wortlaut der Quelle. Synonyme, freie Umschreibungen und eigenständige Vereinfachungen werden im Prompt ausdrücklich ausgeschlossen.
+- **Advanced** – bereitet denselben Quelleninhalt verständlicher auf, erklärt schwierige Begriffe und löst komplizierte Satzstrukturen, ohne externe Informationen hinzuzufügen.
+- **Folienmodus** – erstellt aus PowerPoint-Präsentationen oder folienartigen PDFs exakt eine Karte pro Folie beziehungsweise Seite und erhält die ursprüngliche Reihenfolge. Folien werden weder zusammengelegt noch aufgeteilt.
+
+Neben jedem Modus befindet sich ein Fragezeichen. Es öffnet eine kurze Erklärung des jeweiligen Verhaltens. Die Moduswahl gilt sowohl für die JSON-Datei als auch für den `§§§`-Textmodus und wird direkt in den kopierten Prompt übernommen.
 
 ## Funktionen
 
 - für Smartphone, Tablet und Desktop optimierte Oberfläche
 - appähnliches Kachelmenü mit großen Touch-Flächen
 - bildschirmfüllender Projektassistent auf Mobilgeräten
+- drei auswählbare Prompt-Modi mit eigenen Erklärungs-Pop-ups
 - vorbereiteter ChatGPT-Prompt für Anhänge und direkt eingefügten Text
 - verbindliche Anforderung einer herunterladbaren JSON-Datei im JSON-Modus
 - zusätzlicher Textimport mit `§§§` als Kartentrenner
