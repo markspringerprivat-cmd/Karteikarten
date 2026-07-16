@@ -113,6 +113,7 @@ const app = document.getElementById('app');
 const themeToggle = document.getElementById('themeToggle');
 const homeButton = document.getElementById('homeButton');
 const confirmDialog = document.getElementById('confirmDialog');
+const appDialog = document.getElementById('appDialog');
 
 init();
 
@@ -130,11 +131,12 @@ function bindGlobalEvents() {
   });
 
   themeToggle.addEventListener('click', () => {
-    const root = document.documentElement;
-    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    root.dataset.theme = next;
-    localStorage.setItem(THEME_KEY, next);
-    themeToggle.textContent = next === 'dark' ? '☀' : '◐';
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+  });
+
+  appDialog.addEventListener('click', (event) => {
+    if (event.target === appDialog) appDialog.close();
   });
 
   document.addEventListener('keydown', (event) => {
@@ -170,101 +172,45 @@ function route() {
 }
 
 function renderDashboard() {
-  const prompt = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+  const sortedProjects = state.projects
+    .slice()
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
   app.innerHTML = `
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Karteikarten aus KI-Ausgaben</p>
-        <h1>Vom Lernzettel zum lernbaren Kartensatz.</h1>
-        <p>Kopiere den vorbereiteten Prompt in ChatGPT, importiere das Ergebnis und lerne anschließend direkt im Browser. Alle Projekte bleiben lokal auf deinem Gerät.</p>
-        <div class="hero-pills">
-          <span class="pill">Keine Anmeldung</span>
-          <span class="pill">JSON- und §§§-Import</span>
-          <span class="pill">Lern- und Abfragemodus</span>
-          <span class="pill">GitHub-Pages-fähig</span>
-        </div>
-      </div>
-      <aside class="hero-card">
+    <section class="home-screen" aria-labelledby="homeTitle">
+      <header class="home-header">
         <div>
-          <h2>So funktioniert es</h2>
-          <p>Drei Schritte ohne Server oder Datenbank.</p>
-          <div class="flow-list">
-            <div class="flow-item"><span class="flow-number">1</span><div><strong>Prompt kopieren</strong><small>Mit Text oder angehängten Dateien an ChatGPT senden</small></div></div>
-            <div class="flow-item"><span class="flow-number">2</span><div><strong>Ergebnis importieren</strong><small>JSON-Datei hochladen oder Text einfügen</small></div></div>
-            <div class="flow-item"><span class="flow-number">3</span><div><strong>Lernen</strong><small>Nach Themen filtern und Karten abfragen</small></div></div>
-          </div>
+          <p class="eyebrow">Deine Lernzentrale</p>
+          <h1 id="homeTitle">KartenWerk</h1>
+          <p>Projekte erstellen, öffnen und vollständig lokal auf diesem Gerät lernen.</p>
         </div>
-        <div class="notice info">Empfohlen: JSON. Der Prompt verlangt eine echte Download-Datei, die anschließend hier hochgeladen wird.</div>
-      </aside>
-    </section>
+        <span class="home-storage"><span aria-hidden="true">●</span> ${state.projects.length} ${state.projects.length === 1 ? 'Projekt' : 'Projekte'}</span>
+      </header>
 
-    <section class="grid-2">
-      <article class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>1. ChatGPT-Prompt</h2>
-            <p>Der Prompt erkennt Dateianhänge und eingefügten Text. Im JSON-Modus verlangt er eine echte Download-Datei.</p>
-          </div>
-        </div>
-        <div class="import-tabs" role="tablist" aria-label="Promptformat">
-          <button class="tab-button ${state.promptMode === 'json' ? 'active' : ''}" data-prompt-mode="json" type="button">JSON · empfohlen</button>
-          <button class="tab-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-prompt-mode="delimiter" type="button">§§§ · Textformat</button>
-        </div>
-        <pre class="prompt-preview" id="promptPreview">${escapeHTML(prompt)}</pre>
-        <div class="notice info">${state.promptMode === 'json'
-          ? 'Erwartetes Ergebnis: eine herunterladbare .json-Datei. Diese Datei anschließend rechts unter „Datei hochladen“ auswählen.'
-          : 'Erwartetes Ergebnis: reiner Chattext mit §§§-Trennzeilen. Diesen Text anschließend rechts einfügen.'}</div>
-        <div class="button-row">
-          <button class="button" id="copyPromptButton" type="button">Prompt kopieren</button>
-          <button class="button ghost" id="copyPromptWithSourceButton" type="button">Prompt + Text kopieren</button>
-        </div>
-      </article>
+      <div class="app-grid" aria-label="Startmenü und Projekte">
+        <button class="app-tile system-tile" id="settingsTile" type="button">
+          <span class="tile-icon tile-icon-settings" aria-hidden="true">⚙</span>
+          <span class="tile-title">Einstellungen</span>
+        </button>
 
-      <article class="panel">
-        <div class="panel-header">
-          <div>
-            <h2>2. Kartensatz importieren</h2>
-            <p>Die Themen werden automatisch zum Inhaltsverzeichnis.</p>
-          </div>
-        </div>
-        <div class="field">
-          <label class="label" for="projectTitleOverride">Projektname <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
-          <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Überschreibt den importierten Projekttitel">
-        </div>
-        <div class="import-tabs" role="tablist" aria-label="Importart">
-          <button class="tab-button ${state.importTab === 'paste' ? 'active' : ''}" data-import-tab="paste" type="button">Text einfügen</button>
-          <button class="tab-button ${state.importTab === 'file' ? 'active' : ''}" data-import-tab="file" type="button">Datei hochladen</button>
-        </div>
-        <div id="pasteImport" class="${state.importTab === 'paste' ? '' : 'hidden'}">
-          <label class="label" for="importText">ChatGPT-Textausgabe</label>
-          <textarea class="textarea" id="importText" spellcheck="false" placeholder='Optional: JSON-Inhalt oder Text mit §§§-Trennzeichen hier einfügen …'></textarea>
-          <div class="button-row">
-            <button class="button ghost" id="pasteClipboardButton" type="button">Aus Zwischenablage einfügen</button>
-            <button class="button" id="importTextButton" type="button">Projekt erstellen</button>
-          </div>
-        </div>
-        <div id="fileImport" class="${state.importTab === 'file' ? '' : 'hidden'}">
-          <label class="dropzone" id="dropzone" for="fileInput">
-            <div><strong>JSON- oder TXT-Datei auswählen</strong><span>Datei hier ablegen oder klicken</span></div>
-          </label>
-          <input class="hidden" id="fileInput" type="file" accept=".json,.txt,application/json,text/plain">
-          <p class="field-help">Eine Beispieldatei liegt im Download-Ordner als <span class="code-inline">sample-cards.json</span>.</p>
-        </div>
-      </article>
-    </section>
+        <button class="app-tile system-tile" id="instructionsTile" type="button">
+          <span class="tile-icon tile-icon-help" aria-hidden="true">?</span>
+          <span class="tile-title">Anleitung</span>
+        </button>
 
-    <section>
-      <div class="section-heading">
-        <div>
-          <h2>Deine Projekte</h2>
-          <p>${state.projects.length} ${state.projects.length === 1 ? 'lokal gespeichertes Projekt' : 'lokal gespeicherte Projekte'}</p>
-        </div>
-        ${state.projects.length ? '<button class="button ghost small" id="exportAllButton" type="button">Alle sichern</button>' : ''}
+        <button class="app-tile system-tile add-tile" id="newProjectTile" type="button">
+          <span class="tile-icon tile-icon-add" aria-hidden="true">+</span>
+          <span class="tile-title">Neues Projekt</span>
+        </button>
+
+        ${renderProjectCards(sortedProjects)}
       </div>
-      <div class="project-grid">
-        ${renderProjectCards()}
-      </div>
+
+      ${state.projects.length ? '' : `
+        <div class="home-empty-hint">
+          <strong>Noch keine Lernprojekte</strong>
+          Tippe oben auf das Plus. Dort findest du den Prompt, die Anleitung und den Import in einem Ablauf.
+        </div>`}
     </section>
   `;
 
@@ -272,49 +218,252 @@ function renderDashboard() {
   app.focus({ preventScroll: true });
 }
 
-function renderProjectCards() {
-  if (!state.projects.length) {
-    return `<div class="empty-state"><strong>Noch kein Projekt vorhanden</strong>Importiere oben deinen ersten Kartensatz.</div>`;
-  }
-
-  return state.projects
-    .slice()
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-    .map((project) => {
-      const cardCount = countCards(project);
-      const sectionCount = project.sections.length;
-      return `
-        <article class="project-card">
-          <div class="project-card-top">
-            <span class="project-icon">${escapeHTML(initials(project.title))}</span>
-            <button class="kebab" data-delete-project="${project.id}" type="button" aria-label="Projekt löschen" title="Projekt löschen">×</button>
-          </div>
-          <h3>${escapeHTML(project.title)}</h3>
-          <p class="project-meta">${sectionCount} ${sectionCount === 1 ? 'Thema' : 'Themen'} · ${cardCount} ${cardCount === 1 ? 'Karte' : 'Karten'}</p>
-          <div class="project-card-footer">
-            <span class="project-meta">${formatDate(project.updatedAt)}</span>
-            <button class="button small" data-open-project="${project.id}" type="button">Öffnen</button>
-          </div>
-        </article>`;
-    }).join('');
+function renderProjectCards(projects = state.projects) {
+  return projects.map((project, index) => {
+    const cardCount = countCards(project);
+    const sectionCount = project.sections.length;
+    const hueClass = `project-tone-${(index % 6) + 1}`;
+    return `
+      <article class="app-project ${hueClass}">
+        <button class="app-tile project-tile" data-open-project="${project.id}" type="button" aria-label="${escapeHTML(project.title)} öffnen">
+          <span class="tile-icon project-tile-icon" aria-hidden="true">${escapeHTML(initials(project.title))}</span>
+          <span class="tile-title">${escapeHTML(project.title)}</span>
+          <span class="tile-meta">${sectionCount} ${sectionCount === 1 ? 'Thema' : 'Themen'} · ${cardCount} ${cardCount === 1 ? 'Karte' : 'Karten'}</span>
+        </button>
+        <button class="project-tile-menu" data-delete-project="${project.id}" type="button" aria-label="${escapeHTML(project.title)} löschen" title="Projekt löschen">×</button>
+      </article>`;
+  }).join('');
 }
 
 function bindDashboardEvents() {
-  document.querySelectorAll('[data-prompt-mode]').forEach((button) => {
+  document.getElementById('settingsTile').addEventListener('click', openSettingsDialog);
+  document.getElementById('instructionsTile').addEventListener('click', openInstructionsDialog);
+  document.getElementById('newProjectTile').addEventListener('click', openCreateProjectDialog);
+
+  document.querySelectorAll('[data-open-project]').forEach((button) => {
     button.addEventListener('click', () => {
-      state.promptMode = button.dataset.promptMode;
+      location.hash = `#project=${encodeURIComponent(button.dataset.openProject)}`;
+    });
+  });
+
+  document.querySelectorAll('[data-delete-project]').forEach((button) => {
+    button.addEventListener('click', async (event) => {
+      event.stopPropagation();
+      const project = getProject(button.dataset.deleteProject);
+      if (!project) return;
+      const confirmed = await confirmAction('Projekt löschen?', `„${project.title}“ und alle zugehörigen Karten werden aus diesem Browser entfernt.`);
+      if (confirmed) deleteProject(project.id);
+    });
+  });
+}
+
+function openSettingsDialog() {
+  const currentTheme = document.documentElement.dataset.theme || 'light';
+  appDialog.className = 'app-dialog compact-dialog';
+  appDialog.innerHTML = `
+    <div class="app-dialog-card">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">KartenWerk</p>
+          <h2 id="appDialogTitle">Einstellungen</h2>
+        </div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+
+      <section class="settings-section">
+        <h3>Darstellung</h3>
+        <div class="theme-choice" role="group" aria-label="Farbschema">
+          <button class="choice-button ${currentTheme === 'light' ? 'active' : ''}" data-theme-choice="light" type="button">☀ Hell</button>
+          <button class="choice-button ${currentTheme === 'dark' ? 'active' : ''}" data-theme-choice="dark" type="button">◐ Dunkel</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Lokale Daten</h3>
+        <p>Alle Projekte liegen ausschließlich im lokalen Browserspeicher dieses Geräts. Beim Löschen der Browserdaten können sie verloren gehen.</p>
+        <div class="settings-actions">
+          <button class="button ghost" id="settingsExportAll" type="button" ${state.projects.length ? '' : 'disabled'}>Alle Projekte sichern</button>
+          <label class="button ghost file-button" for="backupInput">Sicherung einlesen</label>
+          <input class="hidden" id="backupInput" type="file" accept=".json,application/json">
+          <button class="button danger" id="settingsDeleteAll" type="button" ${state.projects.length ? '' : 'disabled'}>Alle Projekte löschen</button>
+        </div>
+      </section>
+    </div>`;
+
+  showAppDialog();
+  bindDialogClose();
+
+  document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+    button.addEventListener('click', () => {
+      setTheme(button.dataset.themeChoice);
+      document.querySelectorAll('[data-theme-choice]').forEach((item) => item.classList.toggle('active', item === button));
+    });
+  });
+
+  document.getElementById('settingsExportAll').addEventListener('click', () => {
+    downloadJson({ app: 'KartenWerk', version: APP_VERSION, exportedAt: new Date().toISOString(), projects: state.projects }, 'kartenwerk-gesamtsicherung.json');
+  });
+
+  document.getElementById('backupInput').addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    if (file) importBackupFile(file);
+  });
+
+  document.getElementById('settingsDeleteAll').addEventListener('click', async () => {
+    const confirmed = await confirmAction('Alle Projekte löschen?', 'Alle lokal gespeicherten Projekte und Lernstände werden unwiderruflich entfernt.');
+    if (!confirmed) return;
+    state.projects = [];
+    saveProjects();
+    appDialog.close();
+    renderDashboard();
+    toast('Alle Projekte gelöscht', 'Der lokale Projektspeicher ist jetzt leer.');
+  });
+}
+
+function openInstructionsDialog() {
+  appDialog.className = 'app-dialog compact-dialog';
+  appDialog.innerHTML = `
+    <div class="app-dialog-card">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">In drei Schritten</p>
+          <h2 id="appDialogTitle">So funktioniert KartenWerk</h2>
+        </div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+
+      <div class="instruction-list">
+        <article class="instruction-card">
+          <span>1</span>
+          <div><h3>Prompt kopieren</h3><p>Öffne über die Plus-Kachel den Projektassistenten. Wähle JSON oder §§§ und kopiere den vorbereiteten Prompt.</p></div>
+        </article>
+        <article class="instruction-card">
+          <span>2</span>
+          <div><h3>Quelle an ChatGPT senden</h3><p>Hänge PDF-, Word-, PowerPoint-, Text- oder Bilddateien an oder füge deinen Lerntext direkt unter den Prompt ein. Beides kann kombiniert werden.</p></div>
+        </article>
+        <article class="instruction-card">
+          <span>3</span>
+          <div><h3>Ergebnis importieren</h3><p>Im JSON-Modus lädst du die erzeugte Datei hoch. Im §§§-Modus kopierst du den Chattext in das Eingabefeld. Danach erscheint das Projekt als Kachel.</p></div>
+        </article>
+      </div>
+
+      <div class="notice info"><strong>Empfehlung:</strong> JSON ist stabiler, weil Projekttitel, Oberthemen, Vorderseiten und Rückseiten eindeutig strukturiert sind.</div>
+      <button class="button full-width" id="instructionCreateProject" type="button">Jetzt Projekt erstellen</button>
+    </div>`;
+
+  showAppDialog();
+  bindDialogClose();
+  document.getElementById('instructionCreateProject').addEventListener('click', () => openCreateProjectDialog());
+}
+
+function openCreateProjectDialog() {
+  const prompt = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+  appDialog.className = 'app-dialog create-dialog';
+  appDialog.innerHTML = `
+    <div class="app-dialog-card create-dialog-card">
+      <header class="dialog-header sticky-dialog-header">
+        <div>
+          <p class="eyebrow">Projektassistent</p>
+          <h2 id="appDialogTitle">Neues Lernprojekt</h2>
+        </div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+
+      <div class="create-flow">
+        <section class="flow-step">
+          <div class="flow-step-number">1</div>
+          <div class="flow-step-content">
+            <h3>Ausgabeformat wählen</h3>
+            <p>JSON ist der zuverlässigste Weg. Der alternative Textmodus verwendet §§§ als Kartentrenner.</p>
+            <div class="format-choice" role="group" aria-label="Ausgabeformat">
+              <button class="choice-button ${state.promptMode === 'json' ? 'active' : ''}" data-create-prompt-mode="json" type="button">JSON-Datei</button>
+              <button class="choice-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-create-prompt-mode="delimiter" type="button">§§§-Text</button>
+            </div>
+
+            <details class="prompt-details">
+              <summary>Prompt ansehen</summary>
+              <pre class="prompt-preview" id="promptPreview">${escapeHTML(prompt)}</pre>
+            </details>
+
+            <div class="field">
+              <label class="label" for="sourceText">Ausgangstext direkt ergänzen <span class="optional">optional</span></label>
+              <textarea class="textarea source-textarea" id="sourceText" placeholder="Nur nötig, wenn du den Text nicht als Datei an ChatGPT anhängst."></textarea>
+            </div>
+
+            <div class="button-row mobile-stack">
+              <button class="button" id="copyPromptButton" type="button">Prompt kopieren</button>
+              <button class="button ghost" id="copyPromptWithSourceButton" type="button">Prompt + Text kopieren</button>
+            </div>
+            <div class="notice info" id="formatNotice">${state.promptMode === 'json'
+              ? 'ChatGPT soll eine echte .json-Datei zum Herunterladen erstellen.'
+              : 'ChatGPT gibt kopierbaren Text mit §§§-Trennzeilen aus.'}</div>
+          </div>
+        </section>
+
+        <section class="flow-step">
+          <div class="flow-step-number">2</div>
+          <div class="flow-step-content">
+            <h3>In ChatGPT verarbeiten</h3>
+            <p>Füge den Prompt in ChatGPT ein. Hänge deine PDF, Word-, PowerPoint-, Text- oder Bilddatei an oder verwende den direkt ergänzten Text. Sende anschließend den Auftrag ab.</p>
+          </div>
+        </section>
+
+        <section class="flow-step import-step">
+          <div class="flow-step-number">3</div>
+          <div class="flow-step-content">
+            <h3>Fertigen Kartensatz importieren</h3>
+            <div class="field">
+              <label class="label" for="projectTitleOverride">Projektname <span class="optional">optional</span></label>
+              <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Überschreibt den automatisch erkannten Titel">
+            </div>
+
+            <div class="import-tabs" role="tablist" aria-label="Importart">
+              <button class="tab-button ${state.importTab === 'file' ? 'active' : ''}" data-import-tab="file" type="button">Datei hochladen</button>
+              <button class="tab-button ${state.importTab === 'paste' ? 'active' : ''}" data-import-tab="paste" type="button">Text einfügen</button>
+            </div>
+
+            <div id="fileImport" class="${state.importTab === 'file' ? '' : 'hidden'}">
+              <label class="dropzone mobile-dropzone" id="dropzone" for="fileInput">
+                <span class="dropzone-icon" aria-hidden="true">⇧</span>
+                <div><strong>JSON- oder TXT-Datei auswählen</strong><span>Antippen oder Datei hier ablegen</span></div>
+              </label>
+              <input class="hidden" id="fileInput" type="file" accept=".json,.txt,application/json,text/plain">
+            </div>
+
+            <div id="pasteImport" class="${state.importTab === 'paste' ? '' : 'hidden'}">
+              <label class="label" for="importText">ChatGPT-Ausgabe</label>
+              <textarea class="textarea import-textarea" id="importText" spellcheck="false" placeholder="§§§-Text oder vorhandenen JSON-Inhalt einfügen …"></textarea>
+              <div class="button-row mobile-stack">
+                <button class="button ghost" id="pasteClipboardButton" type="button">Zwischenablage einfügen</button>
+                <button class="button" id="importTextButton" type="button">Projekt erstellen</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>`;
+
+  showAppDialog();
+  bindDialogClose();
+  bindCreateDialogEvents();
+}
+
+function bindCreateDialogEvents() {
+  document.querySelectorAll('[data-create-prompt-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.promptMode = button.dataset.createPromptMode;
       state.importTab = state.promptMode === 'json' ? 'file' : 'paste';
-      renderDashboard();
+      document.querySelectorAll('[data-create-prompt-mode]').forEach((item) => item.classList.toggle('active', item === button));
+      document.getElementById('promptPreview').textContent = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+      document.getElementById('formatNotice').textContent = state.promptMode === 'json'
+        ? 'ChatGPT soll eine echte .json-Datei zum Herunterladen erstellen.'
+        : 'ChatGPT gibt kopierbaren Text mit §§§-Trennzeilen aus.';
+      setImportTab(state.importTab);
     });
   });
 
   document.querySelectorAll('[data-import-tab]').forEach((button) => {
-    button.addEventListener('click', () => {
-      state.importTab = button.dataset.importTab;
-      document.querySelectorAll('[data-import-tab]').forEach((item) => item.classList.toggle('active', item === button));
-      document.getElementById('pasteImport').classList.toggle('hidden', state.importTab !== 'paste');
-      document.getElementById('fileImport').classList.toggle('hidden', state.importTab !== 'file');
-    });
+    button.addEventListener('click', () => setImportTab(button.dataset.importTab));
   });
 
   document.getElementById('copyPromptButton').addEventListener('click', async () => {
@@ -323,10 +472,13 @@ function bindDashboardEvents() {
   });
 
   document.getElementById('copyPromptWithSourceButton').addEventListener('click', async () => {
-    const source = window.prompt('Füge deinen Ausgangstext ein. Er wird nur für den kopierten Prompt verwendet:');
-    if (source === null) return;
+    const source = document.getElementById('sourceText').value.trim();
+    if (!source) {
+      toast('Kein Ausgangstext', 'Füge zuerst Text ein oder nutze „Prompt kopieren“ für einen Dateianhang.');
+      return;
+    }
     const base = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
-    const combined = base.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, source.trim());
+    const combined = base.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, source);
     await copyText(combined);
     toast('Prompt mit Text kopiert', 'Der vollständige Auftrag liegt in der Zwischenablage.');
   });
@@ -335,9 +487,9 @@ function bindDashboardEvents() {
     try {
       const text = await navigator.clipboard.readText();
       document.getElementById('importText').value = text;
-      toast('Zwischenablage eingefügt', 'Die Ausgabe kann jetzt importiert werden.');
+      toast('Zwischenablage eingefügt', 'Du kannst das Projekt jetzt erstellen.');
     } catch {
-      toast('Zugriff nicht möglich', 'Bitte füge den Text mit Strg+V in das Feld ein.');
+      toast('Zugriff nicht möglich', 'Bitte halte das Feld gedrückt und füge den Text manuell ein.');
     }
   });
 
@@ -363,25 +515,41 @@ function bindDashboardEvents() {
     const file = event.dataTransfer.files?.[0];
     if (file) importFile(file);
   });
+}
 
-  document.querySelectorAll('[data-open-project]').forEach((button) => {
-    button.addEventListener('click', () => {
-      location.hash = `#project=${encodeURIComponent(button.dataset.openProject)}`;
-    });
-  });
+function setImportTab(tab) {
+  state.importTab = tab;
+  document.querySelectorAll('[data-import-tab]').forEach((item) => item.classList.toggle('active', item.dataset.importTab === tab));
+  document.getElementById('pasteImport')?.classList.toggle('hidden', tab !== 'paste');
+  document.getElementById('fileImport')?.classList.toggle('hidden', tab !== 'file');
+}
 
-  document.querySelectorAll('[data-delete-project]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const project = getProject(button.dataset.deleteProject);
-      if (!project) return;
-      const confirmed = await confirmAction('Projekt löschen?', `„${project.title}“ und alle zugehörigen Karten werden aus diesem Browser entfernt.`);
-      if (confirmed) deleteProject(project.id);
-    });
-  });
+function showAppDialog() {
+  if (!appDialog.open) appDialog.showModal();
+  appDialog.scrollTop = 0;
+}
 
-  document.getElementById('exportAllButton')?.addEventListener('click', () => {
-    downloadJson({ app: 'KartenWerk', version: APP_VERSION, exportedAt: new Date().toISOString(), projects: state.projects }, 'kartenwerk-gesamtsicherung.json');
+function bindDialogClose() {
+  appDialog.querySelectorAll('[data-close-dialog]').forEach((button) => {
+    button.addEventListener('click', () => appDialog.close());
   });
+}
+
+async function importBackupFile(file) {
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed?.projects)) throw new Error('Die Datei enthält keine KartenWerk-Projektsicherung.');
+    const confirmed = await confirmAction('Sicherung einlesen?', `${parsed.projects.length} Projekte aus der Sicherung ersetzen den aktuellen lokalen Bestand.`);
+    if (!confirmed) return;
+    state.projects = parsed.projects;
+    saveProjects();
+    appDialog.close();
+    renderDashboard();
+    toast('Sicherung eingelesen', `${state.projects.length} Projekte wurden wiederhergestellt.`);
+  } catch (error) {
+    toast('Sicherung ungültig', error.message || 'Die Datei konnte nicht gelesen werden.');
+  }
 }
 
 function renderProject(projectId) {
@@ -619,8 +787,10 @@ function importProjectText(raw, titleOverride = '') {
     if (!countCards(project)) throw new Error('Es wurden keine gültigen Karten gefunden.');
     state.projects.push(project);
     saveProjects();
-    toast('Projekt erstellt', `${countCards(project)} Karten wurden importiert.`);
-    location.hash = `#project=${encodeURIComponent(project.id)}`;
+    if (appDialog.open) appDialog.close();
+    location.hash = '';
+    renderDashboard();
+    toast('Projekt erstellt', `${countCards(project)} Karten wurden importiert und als Kachel gespeichert.`);
   } catch (error) {
     console.error(error);
     toast('Import fehlgeschlagen', error.message || 'Das Format konnte nicht gelesen werden.');
@@ -772,9 +942,15 @@ function countCards(project) {
 function applySavedTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   const preferred = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const theme = saved || preferred;
-  document.documentElement.dataset.theme = theme;
-  themeToggle.textContent = theme === 'dark' ? '☀' : '◐';
+  setTheme(saved || preferred, false);
+}
+
+function setTheme(theme, persist = true) {
+  const next = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  themeToggle.textContent = next === 'dark' ? '☀' : '◐';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#0e1420' : '#4f46e5');
+  if (persist) localStorage.setItem(THEME_KEY, next);
 }
 
 async function copyText(text) {

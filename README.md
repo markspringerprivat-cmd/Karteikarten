@@ -1,55 +1,79 @@
 # KartenWerk
 
-KartenWerk ist eine vollständig statische Karteikarten-Webanwendung. Ein mitgelieferter Prompt verarbeitet direkt eingefügten Text ebenso wie angehängte PDFs, Dokumente, Präsentationen oder Bilddateien. Im empfohlenen JSON-Modus fordert der Prompt ChatGPT auf, eine echte herunterladbare `.json`-Datei zu erzeugen, die anschließend hochgeladen wird.
+KartenWerk ist eine vollständig statische, mobil optimierte Karteikarten-Webanwendung. Sie kann direkt über GitHub Pages veröffentlicht werden. Alle Lernprojekte und Lernstände bleiben im lokalen Browserspeicher des verwendeten Geräts.
+
+## Startoberfläche
+
+Die Startseite ist wie ein Smartphone-Startbildschirm aufgebaut:
+
+1. **Einstellungen** – Hell-/Dunkelmodus, Gesamtsicherung, Wiederherstellung und Löschen lokaler Projekte.
+2. **Anleitung** – kompakte Erklärung des vollständigen Arbeitsablaufs.
+3. **Neues Projekt** – öffnet den mobilen Projektassistenten.
+4. **Projektkacheln** – jedes importierte Lernprojekt erscheint automatisch als eigene Kachel und öffnet den Lernbereich.
+
+Auf Smartphones stehen die drei Systemkacheln immer gemeinsam in der ersten Reihe.
+
+## Projektassistent
+
+Die frühere lange Hauptseite wurde in einen geführten Drei-Schritt-Dialog verschoben:
+
+1. JSON-Datei oder `§§§`-Textformat auswählen und den vorbereiteten Prompt kopieren.
+2. Den Prompt mit angehängten PDF-, Word-, PowerPoint-, Text- oder Bilddateien beziehungsweise direkt eingefügtem Text an ChatGPT senden.
+3. Die erzeugte JSON-/TXT-Datei hochladen oder die Textausgabe einfügen.
+
+Nach einem erfolgreichen Import schließt sich der Assistent. Das neue Projekt erscheint anschließend als Kachel auf der Startseite.
 
 ## Funktionen
 
+- für Smartphone, Tablet und Desktop optimierte Oberfläche
+- appähnliches Kachelmenü mit großen Touch-Flächen
+- bildschirmfüllender Projektassistent auf Mobilgeräten
 - vorbereiteter ChatGPT-Prompt für Anhänge und direkt eingefügten Text
-- verbindliche Erzeugung einer herunterladbaren JSON-Datei im JSON-Modus
-- empfohlener JSON-Import
+- verbindliche Anforderung einer herunterladbaren JSON-Datei im JSON-Modus
 - zusätzlicher Textimport mit `§§§` als Kartentrenner
 - automatische Projekt- und Themenstruktur
 - automatisch erzeugtes Inhaltsverzeichnis
 - Lernmodus: Vorder- und Rückseite gemeinsam
-- Abfragemodus: Karte durch Anklicken umdrehen
+- Abfragemodus: Karte antippen und umdrehen
 - Markierung „Gewusst“ oder „Noch einmal“
 - lokale Speicherung über `localStorage`
-- Einzelprojekt-Export und Gesamtsicherung
-- responsive Darstellung und Dunkelmodus
+- Einzelprojekt-Export, Gesamtsicherung und Wiederherstellung
+- Hell- und Dunkelmodus
+- Web-App-Manifest und eigenes App-Symbol
 - keine externen Bibliotheken, kein Server und keine Anmeldung
 
 ## Verwendung mit ChatGPT
 
 ### JSON-Modus – empfohlen
 
-1. Den JSON-Prompt in KartenWerk kopieren.
-2. Den Prompt in ChatGPT einfügen.
-3. Den Lerntext entweder direkt unter den Prompt setzen oder PDF-, Word-, PowerPoint-, Text- beziehungsweise Bilddateien an die Nachricht anhängen.
-4. ChatGPT soll eine echte Datei nach dem Muster `kartenwerk-kurztitel.json` erstellen. Der JSON-Inhalt soll nicht im Chat erscheinen.
-5. Die heruntergeladene Datei in KartenWerk unter **Datei hochladen** importieren.
-
-Der Prompt weist ChatGPT ausdrücklich an, bei fehlender technischer Dateierstellung nicht ersatzweise den gesamten JSON-Code in den Chat zu schreiben.
+1. Auf der Startseite **Neues Projekt** antippen.
+2. **JSON-Datei** auswählen und den Prompt kopieren.
+3. Den Prompt in ChatGPT einfügen.
+4. Den Lerntext direkt ergänzen oder PDF-, Word-, PowerPoint-, Text- beziehungsweise Bilddateien anhängen. Anhänge und Text können gemeinsam verwendet werden.
+5. ChatGPT soll eine echte Datei nach dem Muster `kartenwerk-kurztitel.json` erzeugen. Der JSON-Inhalt soll nicht in den Chat geschrieben werden.
+6. Die heruntergeladene Datei im dritten Schritt des Projektassistenten hochladen.
 
 ### §§§-Textmodus
 
-Bei diesem alternativen Weg wird das Ergebnis absichtlich als Text im Chat ausgegeben. Der Text kann kopiert und in KartenWerk unter **Text einfügen** importiert werden.
+Bei diesem alternativen Weg wird das Ergebnis als normaler Chattext ausgegeben. Der Text wird kopiert und im dritten Schritt unter **Text einfügen** eingesetzt.
 
 ## GitHub Pages veröffentlichen
 
-1. Einen neuen GitHub-Repository-Ordner anlegen.
-2. `index.html`, `styles.css`, `app.js` und optional `sample-cards.json` in das Stammverzeichnis hochladen.
-3. In GitHub unter **Settings → Pages** als Quelle **Deploy from a branch** wählen.
-4. Branch `main` und Ordner `/ (root)` auswählen.
-5. Speichern. Nach der Bereitstellung ist die Seite über die von GitHub angezeigte URL erreichbar.
+1. Den Inhalt dieses Ordners in das Stammverzeichnis eines GitHub-Repositories hochladen.
+2. In GitHub **Settings → Pages** öffnen.
+3. **Deploy from a branch** auswählen.
+4. Branch `main` und Ordner `/ (root)` festlegen.
+5. Speichern und die anschließend angezeigte GitHub-Pages-Adresse öffnen.
 
 ## Lokale Speicherung
 
-Die Projekte werden ausschließlich im `localStorage` des jeweiligen Browsers gespeichert. Das bedeutet:
+Die Anwendung sendet selbst keine Lerninhalte an einen Server. Zu beachten ist:
 
-- Ein anderer Browser oder ein anderes Gerät sieht diese Daten nicht.
+- Projekte sind nur in dem Browser und auf dem Gerät vorhanden, auf dem sie importiert wurden.
 - Das Löschen von Browserdaten kann die Projekte entfernen.
-- Für wichtige Projekte sollte regelmäßig „Exportieren“ oder „Alle sichern“ genutzt werden.
-- GitHub selbst speichert keine Lerninhalte der Nutzer.
+- Unter **Einstellungen → Alle Projekte sichern** kann eine Gesamtsicherung erstellt werden.
+- Die Sicherung kann später über **Sicherung einlesen** wiederhergestellt werden.
+- GitHub speichert nur die Programmdateien, nicht die Lernprojekte der Nutzer.
 
 ## Empfohlenes Importformat
 
@@ -70,34 +94,12 @@ Die Projekte werden ausschließlich im `localStorage` des jeweiligen Browsers ge
 }
 ```
 
-## Alternativer Textimport
-
-```text
-PROJEKT: Titel
-
-§§§
-
-THEMA: Oberthema
-VORDERSEITE: Frage oder Begriff
-RÜCKSEITE:
-Erklärung
-
-§§§
-
-THEMA: Nächstes Oberthema
-VORDERSEITE: Nächste Frage
-RÜCKSEITE:
-Nächste Erklärung
-```
-
 ## Dateien
 
-- `index.html` – Grundstruktur
-- `styles.css` – vollständiges responsives Design
-- `app.js` – Import, Speicherung, Projekte und Lernlogik
-- `sample-cards.json` – direkt importierbares Beispiel
+- `index.html` – Grundstruktur und Dialoge
+- `styles.css` – vollständiges responsives Kachel- und Lerndesign
+- `app.js` – Import, lokale Speicherung, Projekte, Assistent und Lernlogik
+- `manifest.webmanifest` – Metadaten für die Web-App-Darstellung
+- `icon.svg` – App- und Browser-Symbol
+- `sample-cards.json` – direkt importierbares Beispielprojekt
 - `README.md` – Einrichtung und Dokumentation
-
-## Datenschutz und technische Grenze
-
-Die Anwendung sendet selbst keine Daten an ChatGPT oder andere Dienste. Nutzer kopieren den Prompt und den Ausgangstext eigenständig in ChatGPT. Die daraus erzeugte Ausgabe wird anschließend lokal in KartenWerk importiert.
