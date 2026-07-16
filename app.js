@@ -125,6 +125,9 @@ REGELN
 JSON-SCHEMA
 {
   "schemaVersion":3,
+  "projectId":"stabiler-kurztitel",
+  "part":1,
+  "parts":1,
   "generationMode":"{{MODE_KEY}}",
   "modeVariant":"{{VARIANT_KEY}}",
   "projectTitle":"Titel",
@@ -139,12 +142,14 @@ JSON-SCHEMA
   }]
 }
 
-GROSSE PROJEKTE
-- Beginne mit der Erstellung; lehne die Aufgabe nicht vorsorglich wegen möglicher Ausgabelimits ab.
-- Passt alles in eine Datei, erstelle genau eine Datei.
-- Ist das Projekt zu groß, teile es automatisch in mehrere gültige JSON-Dateien mit höchstens 80 Karten je Datei.
-- Jede Teil-Datei verwendet dasselbe projectTitle und enthält nur vollständige Karten. Benenne sie kartenwerk-kurztitel-teil-01.json, -teil-02.json usw.
-- KartenWerk kann alle Teil-Dateien gleichzeitig auswählen und wieder zu einem Projekt zusammenführen.
+GROSSE ODER NICHT VOLLSTÄNDIG LESBARE QUELLEN
+- Prüfe vor der Dateierstellung, ob die gesamte Quelle sicher verarbeitet werden konnte und ob das Projekt in eine Datei passt.
+- Falls die Quelle nur teilweise verfügbar ist oder mehrere Dateien nötig wären, erstelle noch keine verkürzte Datei. Frage stattdessen ausschließlich:
+  „Die Quelle kann nicht zuverlässig als eine vollständige JSON-Datei ausgegeben werden. Soll ich sie in mehrere KartenWerk-JSON-Dateien aufteilen oder die Erstellung abbrechen? Antworte mit: AUFTEILEN oder ABBRECHEN.“
+- Nach der Antwort AUFTEILEN: Verarbeite die Quelle vollständig und erzeuge mehrere gültige Dateien mit höchstens 80 Karten je Datei.
+- Alle Teile verwenden dieselbe projectId und projectTitle sowie part und parts. Beispiel: "projectId":"forschungsdesigns", "part":1, "parts":3.
+- Benenne die Dateien kartenwerk-kurztitel-teil-01.json, -teil-02.json usw. Jeder Teil enthält nur vollständige Karten.
+- Nach ABBRECHEN: Erstelle keine Datei.
 
 AUSGABE
 - Erstelle echte UTF-8-.json-Dateien als herunterladbare Anhänge. Schreibe den JSON-Inhalt nicht in den Chat oder in Codeblöcke.
@@ -292,6 +297,11 @@ function renderDashboard() {
           <span class="tile-title">Neues Projekt</span>
         </button>
 
+        <button class="app-tile system-tile" id="mergeProjectsTile" type="button" ${state.projects.length < 2 ? 'disabled' : ''}>
+          <span class="tile-icon" aria-hidden="true">↗</span>
+          <span class="tile-title">Projekte verbinden</span>
+        </button>
+
         ${renderProjectCards(sortedProjects)}
       </div>
 
@@ -317,7 +327,7 @@ function renderProjectCards(projects = state.projects) {
         <button class="app-tile project-tile" data-open-project="${project.id}" type="button" aria-label="${escapeHTML(project.title)} öffnen">
           <span class="tile-icon project-tile-icon" aria-hidden="true">${escapeHTML(initials(project.title))}</span>
           <span class="tile-title">${escapeHTML(project.title)}</span>
-          <span class="tile-meta">${sectionCount} ${sectionCount === 1 ? 'Thema' : 'Themen'} · ${cardCount} ${cardCount === 1 ? 'Karte' : 'Karten'}</span>
+          <span class="tile-meta">${sectionCount} ${sectionCount === 1 ? 'Thema' : 'Themen'} · ${cardCount} ${cardCount === 1 ? 'Karte' : 'Karten'}${project.parts > 1 ? ` · Teil ${project.part || '?'} von ${project.parts}` : ''}</span>
         </button>
         <button class="project-tile-menu" data-delete-project="${project.id}" type="button" aria-label="${escapeHTML(project.title)} löschen" title="Projekt löschen">×</button>
       </article>`;
@@ -328,6 +338,7 @@ function bindDashboardEvents() {
   document.getElementById('settingsTile').addEventListener('click', openSettingsDialog);
   document.getElementById('instructionsTile').addEventListener('click', openInstructionsDialog);
   document.getElementById('newProjectTile').addEventListener('click', openCreateProjectDialog);
+  document.getElementById('mergeProjectsTile')?.addEventListener('click', openMergeProjectsDialog);
 
   document.querySelectorAll('[data-open-project]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -344,6 +355,75 @@ function bindDashboardEvents() {
       if (confirmed) deleteProject(project.id);
     });
   });
+}
+
+
+function openMergeProjectsDialog(preselectedProjectId = '') {
+  if (state.projects.length < 2) {
+    toast('Zu wenige Projekte', 'Importiere mindestens zwei Teilprojekte, bevor du sie verbindest.');
+    return;
+  }
+  const grouped = new Map();
+  state.projects.forEach((project) => {
+    const key = project.projectId || safeFilename(project.title);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(project);
+  });
+  const likelyGroups = [...grouped.entries()].filter(([, items]) => items.length > 1);
+  const candidates = preselectedProjectId && grouped.has(preselectedProjectId)
+    ? grouped.get(preselectedProjectId)
+    : (likelyGroups[0]?.[1] || state.projects);
+
+  appDialog.className = 'app-dialog compact-dialog';
+  appDialog.innerHTML = `
+    <form class="app-dialog-card" id="mergeProjectsForm">
+      <header class="dialog-header"><div><p class="eyebrow">Teilprojekte</p><h2 id="appDialogTitle">Projekte verbinden</h2></div><button class="dialog-close" data-close-dialog type="button">×</button></header>
+      <p>Wähle mindestens zwei Projekte. Gleichnamige Kategorien werden zusammengeführt; doppelte Karten-IDs werden automatisch bereinigt.</p>
+      <div class="section-check-list">
+        ${candidates.map((project) => `<label class="section-check-row"><input type="checkbox" name="mergeProject" value="${escapeHTML(project.id)}" checked><span><strong>${escapeHTML(project.title)}</strong><small>${countCards(project)} Karten${project.parts > 1 ? ` · Teil ${project.part} von ${project.parts}` : ''}</small></span></label>`).join('')}
+      </div>
+      <label class="field-label">Name des verbundenen Projekts<input id="mergedProjectTitle" type="text" value="${escapeHTML(candidates[0]?.title?.replace(/\s*\(Teil.*?\)$/i, '') || 'Verbundenes Projekt')}"></label>
+      <label class="select-all-row"><input id="removeSourceProjects" type="checkbox" checked><span><strong>Teilprojekte nach dem Verbinden entfernen</strong><small>Die zusammengeführte Version bleibt erhalten.</small></span></label>
+      <div class="dialog-actions mobile-stack"><button class="button ghost" data-close-dialog type="button">Abbrechen</button><button class="button" type="submit">Auswahl verbinden</button></div>
+    </form>`;
+  showAppDialog();
+  bindDialogClose();
+  document.getElementById('mergeProjectsForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const ids = [...event.currentTarget.querySelectorAll('input[name="mergeProject"]:checked')].map((box) => box.value);
+    if (ids.length < 2) { toast('Auswahl fehlt', 'Wähle mindestens zwei Projekte.'); return; }
+    const selected = ids.map(getProject).filter(Boolean);
+    mergeStoredProjects(selected, document.getElementById('mergedProjectTitle').value, document.getElementById('removeSourceProjects').checked);
+  });
+}
+
+function openMergeSuggestion(projectId) {
+  const matches = state.projects.filter((project) => project.projectId === projectId);
+  if (matches.length < 2) return;
+  openMergeProjectsDialog(projectId);
+}
+
+function mergeStoredProjects(projects, title, removeSources) {
+  const payloads = projects.map((project) => ({
+    schemaVersion: project.schemaVersion || 3,
+    projectId: project.projectId,
+    projectTitle: project.title,
+    generationMode: project.generationMode,
+    modeVariant: project.modeVariant,
+    sections: project.sections
+  }));
+  const mergedPayload = mergeImportPayloads(payloads);
+  mergedPayload.projectTitle = String(title || projects[0].title || 'Verbundenes Projekt').trim();
+  const merged = normalizeProject(mergedPayload, mergedPayload.projectTitle);
+  merged.projectId = projects[0].projectId || safeFilename(merged.title);
+  merged.part = 1;
+  merged.parts = 1;
+  if (removeSources) state.projects = state.projects.filter((item) => !projects.some((project) => project.id === item.id));
+  state.projects.push(merged);
+  saveProjects();
+  appDialog.close();
+  renderDashboard();
+  toast('Projekte verbunden', `${projects.length} Projekte wurden zu ${countCards(merged)} Karten zusammengeführt.`);
 }
 
 function openSettingsDialog() {
@@ -751,6 +831,7 @@ function bindCreateDialogEvents() {
   const dropzone = document.getElementById('dropzone');
   fileInput.addEventListener('change', () => {
     if (fileInput.files?.length) importFiles(Array.from(fileInput.files));
+    fileInput.value = '';
   });
   ['dragenter', 'dragover'].forEach((name) => dropzone.addEventListener(name, (event) => {
     event.preventDefault();
@@ -920,6 +1001,9 @@ function bindProjectHubEvents(project) {
   document.getElementById('exportProjectButton').addEventListener('click', () => {
     const clean = {
       schemaVersion: 3,
+      projectId: project.projectId || safeFilename(project.title),
+      part: project.part || 1,
+      parts: project.parts || 1,
       generationMode: project.generationMode || 'normal',
       modeVariant: project.modeVariant || 'learning',
       projectTitle: project.title,
@@ -1134,6 +1218,9 @@ function mergeImportPayloads(payloads) {
   });
   return {
     schemaVersion: first.schemaVersion || 3,
+    projectId: first.projectId || safeFilename(first.projectTitle || first.title || 'projekt'),
+    part: 1,
+    parts: 1,
     generationMode: first.generationMode,
     modeVariant: first.modeVariant,
     projectTitle: first.projectTitle || first.title || 'Importiertes Lernprojekt',
@@ -1165,7 +1252,10 @@ function importParsedProject(parsed, titleOverride = '', sourceLabel = '') {
   location.hash = '';
   renderDashboard();
   const suffix = sourceLabel ? ` aus ${sourceLabel}` : '';
-  toast('Projekt erstellt', `${countCards(project)} Karten${suffix} wurden zusammengeführt und gespeichert.`);
+  const partInfo = project.parts > 1 ? ` · Teil ${project.part} von ${project.parts}` : '';
+  toast('Projekt importiert', `${countCards(project)} Karten${suffix}${partInfo}.`);
+  const matches = state.projects.filter((item) => item.id !== project.id && item.projectId && item.projectId === project.projectId);
+  if (matches.length) setTimeout(() => openMergeSuggestion(project.projectId), 250);
 }
 
 function parseImport(raw) {
@@ -1281,6 +1371,9 @@ function normalizeProject(input, titleOverride = '') {
     id: makeId('project'),
     version: APP_VERSION,
     schemaVersion: Number(input.schemaVersion) || 1,
+    projectId: String(input.projectId || safeFilename(input.projectTitle || input.title || 'projekt')).trim().slice(0, 100),
+    part: Math.max(1, Math.trunc(Number(input.part) || 1)),
+    parts: Math.max(1, Math.trunc(Number(input.parts) || 1)),
     generationMode,
     modeVariant: String(input.modeVariant || fallbackVariant).slice(0, 40),
     title: (titleOverride.trim() || String(input.projectTitle || input.title || 'Neues Lernprojekt').trim()).slice(0, 100),

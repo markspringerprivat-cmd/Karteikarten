@@ -104,6 +104,8 @@ Die Anwendung sendet selbst keine Lerninhalte an einen Server. Zu beachten ist:
 - `sample-cards.json` – direkt importierbares Beispielprojekt
 - `README.md` – Einrichtung und Dokumentation
 
-## Große Projekte und kurze Prompts
+## Mehrteilige Projekte
 
-Der integrierte ChatGPT-Prompt ist bewusst kompakt aufgebaut. Umfangreiche Projekte dürfen automatisch in mehrere JSON-Teil-Dateien mit höchstens 80 Karten pro Datei aufgeteilt werden. In KartenWerk können alle Teil-Dateien gleichzeitig ausgewählt werden; Kategorien und Karten werden automatisch zu einem einzigen lokalen Projekt zusammengeführt.
+Große Quellen können als mehrere JSON-Dateien ausgegeben werden. Jede Teil-Datei kann `projectId`, `part` und `parts` enthalten. KartenWerk zeigt die Teilnummer auf der Projektkachel an. Mehrere Dateien können entweder gemeinsam importiert oder später über **Projekte verbinden** auf der Startseite zusammengeführt werden.
+
+Der Dateiimport lädt `rich-content.js` vor `app.js`, sodass strukturierte Rückseiten, Listen und Tabellen auch beim ersten Import korrekt validiert werden. Bei ungültigen Dateien erscheint eine konkrete Fehlermeldung statt eines stillen Abbruchs.
