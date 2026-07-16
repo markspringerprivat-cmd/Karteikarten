@@ -1,60 +1,62 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="sm-page-loading">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#4f46e5">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="KartenWerk">
-  <meta name="description" content="Lokale Karteikarten aus ChatGPT-Ausgaben erstellen, ordnen und lernen.">
-  <title>KartenWerk – lokale Karteikarten</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <title>Die verlorene Sinnesmagie</title>
+  <link rel="stylesheet" href="assets/css/style.css?v=134">
 </head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <button class="brand" id="homeButton" type="button" aria-label="Zur Startseite">
-        <span class="brand-mark" aria-hidden="true">KW</span>
-        <span>
-          <strong>KartenWerk</strong>
-          <small>Lokal. Übersichtlich. Ohne Konto.</small>
-        </span>
-      </button>
-      <div class="topbar-actions">
-        <span class="storage-badge" title="Alle Daten bleiben in diesem Browser">
-          <span aria-hidden="true">●</span> lokal gespeichert
-        </span>
-        <button class="icon-button" id="themeToggle" type="button" aria-label="Farbschema wechseln" title="Farbschema wechseln">◐</button>
+<body class="cover-page">
+  <div id="globalPageLoader" class="global-page-loader" role="status" aria-live="polite" aria-label="Spiel wird geladen">
+    <div class="global-page-loader-card">
+      <div class="global-page-loader-icon" aria-hidden="true">✨</div>
+      <div class="global-page-loader-title">Spiel wird vorbereitet …</div>
+      <div class="global-page-loader-track"><div id="globalPageLoaderFill" class="global-page-loader-fill"></div></div>
+      <div class="global-page-loader-meta">
+        <span id="globalPageLoaderNote" class="global-page-loader-note">Benötigte Dateien werden geladen.</span>
+        <span id="globalPageLoaderPercent" class="global-page-loader-percent">0 %</span>
       </div>
-    </header>
+    </div>
+  </div>
+  <script src="assets/js/page-loader.js?v=127"></script>
 
-    <main id="app" tabindex="-1"></main>
+  <main class="cover-card cover-card-welcome">
+    <div class="crest">✨🔑✨</div>
+    <h1>Die verlorene Sinnesmagie</h1>
+    <p class="cover-lead">Willkommen bei <strong>Sinnesmagie</strong> – einem Lernabenteuer rund um Sehen, Hören, Riechen, Schmecken und Fühlen.</p>
+    <p>Du begleitest einen Ritter durch fünf magische Gebiete, löst kurze Minispiele und Quizfragen, sammelst Schlüsselfragmente und hilfst dabei, die Sinnesmagie ins Königreich zurückzubringen.</p>
+    <button id="openStartFlow" class="primary-button cover-start-button" type="button">Spiel starten</button>
+  </main>
+
+  <div id="startFlowModal" class="start-flow-modal hidden" aria-hidden="true">
+    <div class="start-flow-card">
+      <section id="nameStep" class="start-flow-step">
+        <h2>Wie heißt du?</h2>
+        <p>Bitte gib deinen Vor- und Nachnamen ein. Im Adminbereich wird der vollständige Name gespeichert. In der öffentlichen Bestenliste erscheint später nur dein Vorname mit dem ersten Buchstaben des Nachnamens.</p>
+        <label for="playerFirstName">Vorname</label>
+        <input id="playerFirstName" maxlength="30" autocomplete="given-name" placeholder="Vorname">
+        <label for="playerLastName">Nachname</label>
+        <input id="playerLastName" maxlength="40" autocomplete="family-name" placeholder="Nachname">
+        <p id="nameStepError" class="start-flow-error hidden">Bitte trage Vor- und Nachnamen ein.</p>
+        <button id="saveFullName" class="primary-button" type="button">Weiter</button>
+      </section>
+
+      <section id="storyChoiceStep" class="start-flow-step hidden">
+        <h2>Wie möchtest du beginnen?</h2>
+        <p>Die Vorgeschichte dauert etwa 1 Minute und 15 Sekunden und erklärt, warum die Sinne aus dem Königreich verschwunden sind.</p>
+        <div class="start-flow-actions">
+          <button id="watchIntroStory" class="primary-button" type="button">Geschichte ansehen</button>
+          <a class="ghost-button" href="game.html">Geschichte überspringen</a>
+        </div>
+      </section>
+    </div>
   </div>
 
-  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-  <dialog id="appDialog" class="app-dialog" aria-labelledby="appDialogTitle"></dialog>
-
-  <dialog id="modeInfoDialog" class="mode-info-dialog" aria-labelledby="modeInfoTitle"></dialog>
-
-  <dialog id="confirmDialog" class="dialog">
-    <form method="dialog" class="dialog-card">
-      <h2 id="confirmTitle">Bestätigen</h2>
-      <p id="confirmMessage"></p>
-      <div class="dialog-actions">
-        <button class="button ghost" value="cancel">Abbrechen</button>
-        <button class="button danger" value="confirm">Löschen</button>
-      </div>
-    </form>
-  </dialog>
-
-  <noscript>
-    <div class="noscript">Diese Anwendung benötigt JavaScript.</div>
-  </noscript>
-  <script src="rich-content.js" defer></script>
-  <script src="app.js" defer></script>
+  <iframe id="introStoryFrame" class="intro-story-frame hidden" src="story.html?embedded=1" title="Vorgeschichte" aria-label="Vorgeschichte"></iframe>
+  <script src="assets/js/cloud-save.js?v=127"></script>
+  <script src="assets/js/score-system.js?v=127"></script>
+  <script src="assets/js/start-flow.js?v=134"></script>
+<script>window.SinnesGameOver={play(){try{const a=new Audio((location.pathname.includes('/levels/')?'../':'')+'assets/audio/gameover.mp3');a.volume=Number(localStorage.getItem('masterVolume')||localStorage.getItem('sinnesmagie-volume')||0.5);a.play().catch(()=>{});}catch{}}};</script>
 </body>
 </html>
