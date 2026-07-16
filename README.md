@@ -32,15 +32,29 @@ Nach einem erfolgreichen Import schließt sich der Assistent. Das neue Projekt e
 - verbindliche Anforderung einer herunterladbaren JSON-Datei im JSON-Modus
 - zusätzlicher Textimport mit `§§§` als Kartentrenner
 - automatische Projekt- und Themenstruktur
-- automatisch erzeugtes Inhaltsverzeichnis
-- Lernmodus: Vorder- und Rückseite gemeinsam
-- Abfragemodus: Karte antippen und umdrehen
-- Markierung „Gewusst“ oder „Noch einmal“
+- automatisch erzeugtes, aufklappbares Inhaltsverzeichnis
+- freie Mehrfachauswahl der Kategorien mit „Alle Kategorien“
+- Lernmodus in einer eigenen, scrollfreien Vollbildseite
+- Abfragemodus mit Karte antippen, richtig/falsch bewerten und Ergebniszähler
+- Wischsteuerung nach links und rechts auf Mobilgeräten
+- Nachlernmodus für dauerhaft falsch markierte Karten
 - lokale Speicherung über `localStorage`
 - Einzelprojekt-Export, Gesamtsicherung und Wiederherstellung
 - Hell- und Dunkelmodus
 - Web-App-Manifest und eigenes App-Symbol
 - keine externen Bibliotheken, kein Server und keine Anmeldung
+
+
+## Lernen innerhalb eines Projekts
+
+Nach dem Öffnen einer Projektkachel stehen die Funktionen in fester Reihenfolge bereit:
+
+1. **Lernmodus** – öffnet eine Kategorienauswahl mit Checkboxen und der Option **Alle Kategorien**.
+2. **Abfragemodus** – verwendet dieselbe Auswahl und speichert jede Karte als richtig oder falsch.
+3. **Nachlernen** – wird verfügbar, sobald mindestens eine Karte falsch beantwortet wurde, und lädt nur diese Karten.
+4. **Inhaltsverzeichnis aufklappen** – zeigt alle Kategorien untereinander. Beim Antippen einer einzelnen Kategorie erscheint eine direkte Auswahl zwischen Lern-, Abfrage- und gegebenenfalls Nachlernmodus.
+
+Die eigentliche Lerneinheit öffnet sich in `study.html`. Die Seite selbst ist nicht scrollbar und ordnet Kopfzeile, Fortschritt, Karte und Bedienfelder innerhalb der sichtbaren Bildschirmhöhe an. Eine Karte wird durch Antippen umgedreht. Auf Touchgeräten wechselt eine horizontale Wischbewegung zur vorherigen oder nächsten Karte. Im Abfragemodus erscheinen nach dem Aufdecken die Schaltflächen **Falsch** und **Richtig**. Falsch bewertete Karten bleiben im Projekt unter **Nachlernen** erhalten, bis sie dort oder in einer späteren Abfrage als richtig markiert werden.
 
 ## Verwendung mit ChatGPT
 
@@ -97,8 +111,11 @@ Die Anwendung sendet selbst keine Lerninhalte an einen Server. Zu beachten ist:
 ## Dateien
 
 - `index.html` – Grundstruktur und Dialoge
-- `styles.css` – vollständiges responsives Kachel- und Lerndesign
-- `app.js` – Import, lokale Speicherung, Projekte, Assistent und Lernlogik
+- `styles.css` – Startseite, Projektzentrale, Dialoge und mobile Auswahloberflächen
+- `app.js` – Import, lokale Speicherung, Projekte, Assistent und Sitzungsstart
+- `study.html` – separate Vollbildseite für Lern-, Abfrage- und Nachlernmodus
+- `study.css` – scrollfreies, mobiles Kartendesign
+- `study.js` – Kartensteuerung, Wischgesten, Bewertung und Lernstandsverfolgung
 - `manifest.webmanifest` – Metadaten für die Web-App-Darstellung
 - `icon.svg` – App- und Browser-Symbol
 - `sample-cards.json` – direkt importierbares Beispielprojekt

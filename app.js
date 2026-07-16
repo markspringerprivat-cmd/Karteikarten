@@ -139,21 +139,6 @@ function bindGlobalEvents() {
     if (event.target === appDialog) appDialog.close();
   });
 
-  document.addEventListener('keydown', (event) => {
-    if (!location.hash.startsWith('#project=')) return;
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
-
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      moveCard(1);
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      moveCard(-1);
-    } else if (event.key === ' ' && state.study.mode === 'quiz') {
-      event.preventDefault();
-      toggleFlip();
-    }
-  });
 }
 
 function route() {
@@ -559,139 +544,108 @@ function renderProject(projectId) {
     return;
   }
 
-  const cards = getFilteredCards(project);
-  if (state.study.index >= cards.length) state.study.index = Math.max(0, cards.length - 1);
-  const current = cards[state.study.index];
-  const known = Object.values(project.progress || {}).filter((value) => value === 'known').length;
-  const repeat = Object.values(project.progress || {}).filter((value) => value === 'repeat').length;
+  const progress = project.progress || {};
+  const known = Object.values(progress).filter((value) => value === 'known').length;
+  const repeat = Object.values(progress).filter((value) => value === 'repeat').length;
+  const total = countCards(project);
+  const open = total - known - repeat;
 
   app.innerHTML = `
-    <header class="study-header">
-      <div>
-        <div class="breadcrumb"><button id="backToDashboard" type="button">Projekte</button> / Lernprojekt</div>
-        <h1>${escapeHTML(project.title)}</h1>
-        <p>${project.sections.length} ${project.sections.length === 1 ? 'Thema' : 'Themen'} · ${countCards(project)} ${countCards(project) === 1 ? 'Karte' : 'Karten'} · lokal gespeichert</p>
-      </div>
-      <div class="button-row">
-        <button class="button ghost small" id="exportProjectButton" type="button">Exportieren</button>
-        <button class="button ghost small" id="renameProjectButton" type="button">Umbenennen</button>
-        <button class="button danger small" id="deleteCurrentProjectButton" type="button">Löschen</button>
-      </div>
-    </header>
-
-    <div class="study-layout">
-      <aside class="sidebar">
-        <div class="sidebar-head"><strong>Inhaltsverzeichnis</strong><small>Thema zum Filtern auswählen</small></div>
-        <nav class="toc" aria-label="Inhaltsverzeichnis">
-          <button class="toc-button ${state.study.section === 'all' ? 'active' : ''}" data-section="all" type="button"><span>Alle Karten</span><span class="count-badge">${countCards(project)}</span></button>
-          ${project.sections.map((section, index) => `
-            <button class="toc-button ${state.study.section === String(index) ? 'active' : ''}" data-section="${index}" type="button">
-              <span>${escapeHTML(section.title)}</span><span class="count-badge">${section.cards.length}</span>
-            </button>`).join('')}
-        </nav>
-      </aside>
-
-      <section class="study-shell">
-        <div class="study-toolbar">
-          <div class="segmented" aria-label="Lernmodus">
-            <button class="${state.study.mode === 'learn' ? 'active' : ''}" data-mode="learn" type="button">Lernmodus</button>
-            <button class="${state.study.mode === 'quiz' ? 'active' : ''}" data-mode="quiz" type="button">Abfragemodus</button>
+    <section class="project-hub" aria-labelledby="projectTitle">
+      <header class="project-hub-header">
+        <button class="project-back" id="backToDashboard" type="button">← Projekte</button>
+        <div class="project-title-row">
+          <div>
+            <p class="eyebrow">Lernprojekt</p>
+            <h1 id="projectTitle">${escapeHTML(project.title)}</h1>
+            <p>${project.sections.length} ${project.sections.length === 1 ? 'Kategorie' : 'Kategorien'} · ${total} ${total === 1 ? 'Karte' : 'Karten'}</p>
           </div>
-          <div class="progress-wrap">
-            <div class="progress-meta"><span>${escapeHTML(current?.sectionTitle || 'Keine Karten')}</span><span>${cards.length ? `${state.study.index + 1} / ${cards.length}` : '0 / 0'}</span></div>
-            <div class="progress-track"><div class="progress-bar" style="width:${cards.length ? ((state.study.index + 1) / cards.length) * 100 : 0}%"></div></div>
+          <div class="project-tools" aria-label="Projekt bearbeiten">
+            <button class="icon-action" id="exportProjectButton" type="button" title="Projekt exportieren" aria-label="Projekt exportieren">⇩</button>
+            <button class="icon-action" id="renameProjectButton" type="button" title="Projekt umbenennen" aria-label="Projekt umbenennen">✎</button>
+            <button class="icon-action danger-icon" id="deleteCurrentProjectButton" type="button" title="Projekt löschen" aria-label="Projekt löschen">⌫</button>
           </div>
         </div>
+      </header>
 
-        ${current ? renderFlashcard(current) : `<div class="no-cards"><div><strong>In diesem Bereich sind keine Karten vorhanden.</strong><br>Wähle ein anderes Thema oder importiere einen neuen Kartensatz.</div></div>`}
+      <div class="project-hub-grid">
+        <section class="project-launch-panel" aria-labelledby="startHeading">
+          <div class="launch-intro">
+            <span class="launch-icon" aria-hidden="true">▶</span>
+            <div>
+              <h2 id="startHeading">Was möchtest du starten?</h2>
+              <p>Wähle anschließend die Kategorien aus, die in der Lerneinheit vorkommen sollen.</p>
+            </div>
+          </div>
 
-        ${current ? `
-          ${state.study.mode === 'quiz' ? `
-            <div class="rating-row ${state.study.flipped ? '' : 'hidden'}" id="ratingRow">
-              <button class="button ghost" data-rate="repeat" type="button">Noch einmal</button>
-              <button class="button success" data-rate="known" type="button">Gewusst</button>
-            </div>` : ''}
-          <div class="study-nav">
-            <button class="button ghost" id="prevCardButton" type="button" ${state.study.index === 0 ? 'disabled' : ''}>← Zurück</button>
-            <span class="card-position">${state.study.mode === 'quiz' ? 'Leertaste dreht die Karte' : 'Titel und Erklärung zusammen'}</span>
-            <button class="button" id="nextCardButton" type="button" ${state.study.index >= cards.length - 1 ? 'disabled' : ''}>Weiter →</button>
-          </div>` : ''}
+          <div class="mode-launch-list">
+            <button class="mode-launch learn-launch" data-open-study="learn" type="button">
+              <span class="mode-launch-icon" aria-hidden="true">▣</span>
+              <span><strong>Lernmodus</strong><small>Karten in Ruhe ansehen und durchgehen</small></span>
+              <span class="mode-chevron" aria-hidden="true">›</span>
+            </button>
+            <button class="mode-launch quiz-launch" data-open-study="quiz" type="button">
+              <span class="mode-launch-icon" aria-hidden="true">?</span>
+              <span><strong>Abfragemodus</strong><small>Antwort aufdecken und als richtig oder falsch bewerten</small></span>
+              <span class="mode-chevron" aria-hidden="true">›</span>
+            </button>
+            <button class="mode-launch relearn-launch" data-open-study="relearn" type="button" ${repeat ? '' : 'disabled'}>
+              <span class="mode-launch-icon" aria-hidden="true">↻</span>
+              <span><strong>Nachlernen</strong><small>${repeat ? `${repeat} falsch beantwortete ${repeat === 1 ? 'Karte' : 'Karten'} erneut üben` : 'Wird nach der ersten falschen Antwort verfügbar'}</small></span>
+              <span class="mode-chevron" aria-hidden="true">›</span>
+            </button>
+          </div>
 
-        <div class="stats-row">
-          <div class="stat"><strong>${known}</strong><span>als gewusst markiert</span></div>
-          <div class="stat"><strong>${repeat}</strong><span>zum Wiederholen</span></div>
-          <div class="stat"><strong>${countCards(project) - known - repeat}</strong><span>noch ohne Bewertung</span></div>
-        </div>
-      </section>
-    </div>
-  `;
+          <div class="project-stats" aria-label="Lernstand">
+            <div><strong>${known}</strong><span>richtig</span></div>
+            <div><strong>${repeat}</strong><span>nachlernen</span></div>
+            <div><strong>${open}</strong><span>offen</span></div>
+          </div>
+        </section>
 
-  bindProjectEvents(project);
+        <section class="project-index-panel" aria-labelledby="tocHeading">
+          <div class="project-index-heading">
+            <span aria-hidden="true">☰</span>
+            <div>
+              <h2 id="tocHeading">Inhaltsverzeichnis</h2>
+              <p>Eine Kategorie kann auch direkt gestartet werden.</p>
+            </div>
+          </div>
+          <details class="project-toc-details">
+            <summary>
+              <span class="toc-open-label">Inhaltsverzeichnis aufklappen</span>
+              <span class="toc-close-label">Inhaltsverzeichnis zuklappen</span>
+              <span class="details-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="project-toc-list">
+              ${project.sections.map((section, index) => {
+                const sectionWrong = section.cards.filter((card) => progress[card.id] === 'repeat').length;
+                return `
+                  <button class="project-toc-item" data-open-section="${index}" type="button">
+                    <span class="toc-number">${index + 1}</span>
+                    <span class="toc-copy"><strong>${escapeHTML(section.title)}</strong><small>${section.cards.length} ${section.cards.length === 1 ? 'Karte' : 'Karten'}${sectionWrong ? ` · ${sectionWrong} nachlernen` : ''}</small></span>
+                    <span class="mode-chevron" aria-hidden="true">›</span>
+                  </button>`;
+              }).join('')}
+            </div>
+          </details>
+        </section>
+      </div>
+    </section>`;
+
+  bindProjectHubEvents(project);
   app.focus({ preventScroll: true });
 }
 
-function renderFlashcard(card) {
-  const status = getProject(state.study.projectId)?.progress?.[card.id];
-  const statusLabel = status === 'known' ? ' · Gewusst' : status === 'repeat' ? ' · Wiederholen' : '';
-
-  if (state.study.mode === 'learn') {
-    return `
-      <div class="flashcard-stage">
-        <article class="flashcard learn-card" aria-label="Lernkarte">
-          <div class="card-face">
-            <span class="card-kicker">${escapeHTML(card.sectionTitle)}${statusLabel}</span>
-            <h2>${escapeHTML(card.front)}</h2>
-            <div class="card-answer">${formatAnswer(card.back)}</div>
-          </div>
-        </article>
-      </div>`;
-  }
-
-  return `
-    <div class="flashcard-stage">
-      <button class="flashcard ${state.study.flipped ? 'flipped' : ''}" id="flashcardButton" type="button" aria-label="Karte umdrehen">
-        <span class="flashcard-inner">
-          <span class="card-face front">
-            <span class="card-kicker">${escapeHTML(card.sectionTitle)}${statusLabel}</span>
-            <h2>${escapeHTML(card.front)}</h2>
-            <span class="card-hint">Klicken zum Aufdecken</span>
-          </span>
-          <span class="card-face back">
-            <span class="card-kicker">Antwort</span>
-            <span class="card-answer">${formatAnswer(card.back)}</span>
-            <span class="card-hint">Klicken zum Zurückdrehen</span>
-          </span>
-        </span>
-      </button>
-    </div>`;
-}
-
-function bindProjectEvents(project) {
+function bindProjectHubEvents(project) {
   document.getElementById('backToDashboard').addEventListener('click', () => { location.hash = ''; });
 
-  document.querySelectorAll('[data-section]').forEach((button) => {
-    button.addEventListener('click', () => {
-      state.study.section = button.dataset.section;
-      state.study.index = 0;
-      state.study.flipped = false;
-      renderProject(project.id);
-    });
+  document.querySelectorAll('[data-open-study]').forEach((button) => {
+    button.addEventListener('click', () => openStudySelectionDialog(project, button.dataset.openStudy));
   });
 
-  document.querySelectorAll('[data-mode]').forEach((button) => {
-    button.addEventListener('click', () => {
-      state.study.mode = button.dataset.mode;
-      state.study.flipped = false;
-      renderProject(project.id);
-    });
-  });
-
-  document.getElementById('flashcardButton')?.addEventListener('click', toggleFlip);
-  document.getElementById('prevCardButton')?.addEventListener('click', () => moveCard(-1));
-  document.getElementById('nextCardButton')?.addEventListener('click', () => moveCard(1));
-
-  document.querySelectorAll('[data-rate]').forEach((button) => {
-    button.addEventListener('click', () => rateCurrentCard(button.dataset.rate));
+  document.querySelectorAll('[data-open-section]').forEach((button) => {
+    button.addEventListener('click', () => openCategoryModeDialog(project, Number(button.dataset.openSection)));
   });
 
   document.getElementById('exportProjectButton').addEventListener('click', () => {
@@ -721,44 +675,135 @@ function bindProjectEvents(project) {
   });
 }
 
-function moveCard(direction) {
-  const project = getProject(state.study.projectId);
-  if (!project) return;
-  const cards = getFilteredCards(project);
-  const next = Math.min(Math.max(state.study.index + direction, 0), cards.length - 1);
-  if (next === state.study.index) return;
-  state.study.index = next;
-  state.study.flipped = false;
-  renderProject(project.id);
+function openStudySelectionDialog(project, mode) {
+  const eligibleSections = project.sections.map((section, index) => ({
+    section,
+    index,
+    count: mode === 'relearn'
+      ? section.cards.filter((card) => project.progress?.[card.id] === 'repeat').length
+      : section.cards.length
+  })).filter((entry) => entry.count > 0);
+
+  if (!eligibleSections.length) {
+    toast('Keine Karten vorhanden', mode === 'relearn' ? 'Es gibt aktuell keine falsch beantworteten Karten zum Nachlernen.' : 'Dieses Projekt enthält keine Karten.');
+    return;
+  }
+
+  const labels = {
+    learn: ['Lernmodus', 'Kategorien zum Lernen auswählen', 'Lernmodus starten'],
+    quiz: ['Abfragemodus', 'Kategorien für die Abfrage auswählen', 'Abfragemodus starten'],
+    relearn: ['Nachlernen', 'Falsch beantwortete Karten auswählen', 'Nachlernen starten']
+  }[mode];
+
+  appDialog.className = 'app-dialog compact-dialog study-select-dialog';
+  appDialog.innerHTML = `
+    <form class="app-dialog-card study-select-card" id="studySelectionForm">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">${labels[0]}</p>
+          <h2 id="appDialogTitle">${labels[1]}</h2>
+        </div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+
+      <label class="select-all-row">
+        <input id="selectAllSections" type="checkbox" checked>
+        <span><strong>Alle Kategorien</strong><small>Alle verfügbaren Karten dieser Auswahl verwenden</small></span>
+      </label>
+
+      <div class="section-check-list">
+        ${eligibleSections.map(({ section, count }) => `
+          <label class="section-check-row">
+            <input type="checkbox" name="sections" value="${escapeHTML(section.id)}" checked>
+            <span><strong>${escapeHTML(section.title)}</strong><small>${count} ${count === 1 ? 'Karte' : 'Karten'}</small></span>
+          </label>`).join('')}
+      </div>
+
+      <p class="selection-count" id="selectionCount"></p>
+      <div class="dialog-actions mobile-stack">
+        <button class="button ghost" data-close-dialog type="button">Abbrechen</button>
+        <button class="button" id="startStudyButton" type="submit">${labels[2]}</button>
+      </div>
+    </form>`;
+
+  showAppDialog();
+  bindDialogClose();
+
+  const form = document.getElementById('studySelectionForm');
+  const all = document.getElementById('selectAllSections');
+  const boxes = [...form.querySelectorAll('input[name="sections"]')];
+  const countLabel = document.getElementById('selectionCount');
+  const startButton = document.getElementById('startStudyButton');
+
+  const updateSelection = () => {
+    const selected = boxes.filter((box) => box.checked);
+    const cardCount = eligibleSections
+      .filter(({ section }) => selected.some((box) => box.value === section.id))
+      .reduce((sum, entry) => sum + entry.count, 0);
+    all.checked = selected.length === boxes.length;
+    all.indeterminate = selected.length > 0 && selected.length < boxes.length;
+    countLabel.textContent = `${selected.length} von ${boxes.length} Kategorien · ${cardCount} ${cardCount === 1 ? 'Karte' : 'Karten'}`;
+    startButton.disabled = selected.length === 0;
+  };
+
+  all.addEventListener('change', () => {
+    boxes.forEach((box) => { box.checked = all.checked; });
+    updateSelection();
+  });
+  boxes.forEach((box) => box.addEventListener('change', updateSelection));
+  updateSelection();
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const selectedIds = boxes.filter((box) => box.checked).map((box) => box.value);
+    if (!selectedIds.length) return;
+    startStudySession(project.id, mode, selectedIds);
+  });
 }
 
-function toggleFlip() {
-  if (state.study.mode !== 'quiz') return;
-  state.study.flipped = !state.study.flipped;
-  const card = document.getElementById('flashcardButton');
-  const ratingRow = document.getElementById('ratingRow');
-  if (card) {
-    card.classList.toggle('flipped', state.study.flipped);
-    card.setAttribute('aria-label', state.study.flipped ? 'Karte zurückdrehen' : 'Karte umdrehen');
-  }
-  if (ratingRow) ratingRow.classList.toggle('hidden', !state.study.flipped);
+function openCategoryModeDialog(project, sectionIndex) {
+  const section = project.sections[sectionIndex];
+  if (!section) return;
+  const wrong = section.cards.filter((card) => project.progress?.[card.id] === 'repeat').length;
+
+  appDialog.className = 'app-dialog compact-dialog category-mode-dialog';
+  appDialog.innerHTML = `
+    <div class="app-dialog-card category-mode-card">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">Kategorie ${sectionIndex + 1}</p>
+          <h2 id="appDialogTitle">${escapeHTML(section.title)}</h2>
+        </div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+      <p class="category-mode-intro">Wie möchtest du die ${section.cards.length} ${section.cards.length === 1 ? 'Karte' : 'Karten'} dieser Kategorie bearbeiten?</p>
+      <div class="category-mode-actions">
+        <button class="mode-launch learn-launch" data-category-mode="learn" type="button">
+          <span class="mode-launch-icon" aria-hidden="true">▣</span><span><strong>Lernmodus</strong><small>Kategorie ansehen und durchgehen</small></span><span class="mode-chevron">›</span>
+        </button>
+        <button class="mode-launch quiz-launch" data-category-mode="quiz" type="button">
+          <span class="mode-launch-icon" aria-hidden="true">?</span><span><strong>Abfragemodus</strong><small>Richtig und falsch selbst bewerten</small></span><span class="mode-chevron">›</span>
+        </button>
+        ${wrong ? `<button class="mode-launch relearn-launch" data-category-mode="relearn" type="button">
+          <span class="mode-launch-icon" aria-hidden="true">↻</span><span><strong>Nachlernen</strong><small>${wrong} falsch beantwortete ${wrong === 1 ? 'Karte' : 'Karten'}</small></span><span class="mode-chevron">›</span>
+        </button>` : ''}
+      </div>
+    </div>`;
+
+  showAppDialog();
+  bindDialogClose();
+  document.querySelectorAll('[data-category-mode]').forEach((button) => {
+    button.addEventListener('click', () => startStudySession(project.id, button.dataset.categoryMode, [section.id]));
+  });
 }
 
-function rateCurrentCard(rating) {
-  const project = getProject(state.study.projectId);
-  const cards = project ? getFilteredCards(project) : [];
-  const card = cards[state.study.index];
-  if (!project || !card) return;
-  project.progress ||= {};
-  project.progress[card.id] = rating;
-  project.updatedAt = new Date().toISOString();
-  saveProjects();
-
-  if (state.study.index < cards.length - 1) {
-    state.study.index += 1;
-    state.study.flipped = false;
-  }
-  renderProject(project.id);
+function startStudySession(projectId, mode, sectionIds) {
+  const params = new URLSearchParams({
+    project: projectId,
+    mode,
+    sections: sectionIds.join(',')
+  });
+  window.location.href = `study.html?${params.toString()}`;
 }
 
 function importFile(file) {
