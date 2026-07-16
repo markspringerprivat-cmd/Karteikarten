@@ -65,6 +65,7 @@ function render() {
   const progress = ((session.index + 1) / session.cards.length) * 100;
   const status = project.progress?.[card.id];
   const statusText = status === 'known' ? 'Bisher richtig' : status === 'repeat' ? 'Zum Nachlernen' : 'Noch unbewertet';
+  const sourceText = formatSource(card.source);
 
   app.innerHTML = `
     <header class="session-header">
@@ -94,9 +95,12 @@ function render() {
               <div class="face-hint">Antippen zum Umdrehen · nach links oder rechts wischen</div>
             </div>
             <div class="session-face back">
-              <div class="face-top"><span class="face-kicker">Antwort</span><span class="face-side">${escapeHTML(card.sectionTitle)}</span></div>
-              <div class="answer-viewport"><div class="answer-content fit-answer">${formatAnswer(card.back)}</div></div>
-              <div class="face-hint">Antippen, um wieder die Vorderseite zu sehen</div>
+              <div class="face-top"><span class="face-kicker">Antwort</span><span class="face-side">${escapeHTML(sourceText || card.sectionTitle)}</span></div>
+              <div class="answer-shell">
+                <div class="answer-viewport" id="answerViewport"><div class="answer-content">${formatAnswer(card.back)}</div></div>
+                <div class="scroll-cue" id="scrollCue" aria-hidden="true"><span>↓</span> Inhalt scrollen</div>
+              </div>
+              <div class="face-hint" id="backFaceHint">Antippen, um wieder die Vorderseite zu sehen</div>
             </div>
           </div>
         </div>
@@ -164,6 +168,11 @@ function bindSessionEvents() {
     tableRegion.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true });
     tableRegion.addEventListener('touchend', (event) => event.stopPropagation(), { passive: true });
   });
+  const answerViewport = document.getElementById('answerViewport');
+  answerViewport?.addEventListener('scroll', () => {
+    session.lastSwipeAt = Date.now();
+    updateAnswerOverflow();
+  }, { passive: true });
 }
 
 function bindSwipe(element) {
@@ -313,7 +322,23 @@ function renderError(title, message) {
 
 function fitCardContent() {
   fitElement(document.querySelector('.fit-front'), 18);
-  fitElement(document.querySelector('.fit-answer'), 14);
+  const viewport = document.getElementById('answerViewport');
+  if (viewport) viewport.scrollTop = 0;
+  updateAnswerOverflow();
+}
+
+function updateAnswerOverflow() {
+  const viewport = document.getElementById('answerViewport');
+  const cue = document.getElementById('scrollCue');
+  const hint = document.getElementById('backFaceHint');
+  if (!viewport || !cue || !hint) return;
+  const scrollable = viewport.scrollHeight > viewport.clientHeight + 6;
+  const atBottom = viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 8;
+  cue.classList.toggle('visible', scrollable && !atBottom);
+  viewport.classList.toggle('is-scrollable', scrollable);
+  hint.textContent = scrollable
+    ? 'Nach oben oder unten scrollen · antippen zum Umdrehen'
+    : 'Antippen, um wieder die Vorderseite zu sehen';
 }
 
 function fitElement(element, minimum) {
@@ -368,6 +393,15 @@ function showToast(message) {
 
 function formatAnswer(content) {
   return window.KartenWerkRichText?.render(content) || '<p>Keine Erklärung vorhanden.</p>';
+}
+
+function formatSource(source) {
+  if (!source || typeof source !== 'object') return '';
+  const parts = [];
+  if (source.file) parts.push(String(source.file));
+  if (source.slide) parts.push(`Folie ${source.slide}`);
+  else if (source.page) parts.push(`Seite ${source.page}`);
+  return parts.join(' · ');
 }
 
 function escapeHTML(value) {

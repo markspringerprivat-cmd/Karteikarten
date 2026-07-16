@@ -1,15 +1,23 @@
 {
+  "schemaVersion": 3,
+  "generationMode": "normal",
+  "modeVariant": "learning",
   "projectTitle": "Beispielprojekt: Forschungsmethoden",
   "sections": [
     {
       "title": "Grundbegriffe",
       "cards": [
         {
+          "id": "card-001",
           "front": "Was umfasst ein Forschungsdesign?",
           "back": [
             {
               "type": "paragraph",
               "text": "Ein Forschungsdesign beschreibt die grundlegenden Entscheidungen über das Vorgehen bei einer empirischen Untersuchung."
+            },
+            {
+              "type": "heading",
+              "text": "Zentrale Entscheidungen"
             },
             {
               "type": "list",
@@ -20,9 +28,15 @@
                 "Entscheidung über Quer-, Trend- oder Panelstudie"
               ]
             }
-          ]
+          ],
+          "source": {
+            "file": "beispiel-forschungsmethoden.pdf",
+            "page": 4,
+            "slide": null
+          }
         },
         {
+          "id": "card-002",
           "front": "Welche Zeitdimensionen können Untersuchungen haben?",
           "back": [
             {
@@ -46,7 +60,12 @@
                 ]
               ]
             }
-          ]
+          ],
+          "source": {
+            "file": "beispiel-forschungsmethoden.pdf",
+            "page": 7,
+            "slide": null
+          }
         }
       ]
     },
@@ -54,6 +73,7 @@
       "title": "Datenebenen",
       "cards": [
         {
+          "id": "card-003",
           "front": "Was sind Aggregatdaten?",
           "back": [
             {
@@ -65,7 +85,12 @@
                 "Sie können durch Aggregation von Individualdaten entstehen"
               ]
             }
-          ]
+          ],
+          "source": {
+            "file": "beispiel-forschungsmethoden.pdf",
+            "page": 10,
+            "slide": null
+          }
         }
       ]
     }

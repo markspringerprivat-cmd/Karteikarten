@@ -410,3 +410,54 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid color-mix(in
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* Lange Karten: nur der Karteninhalt scrollt */
+.answer-shell {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.answer-shell .answer-viewport {
+  width: 100%;
+  height: 100%;
+  padding-bottom: 28px;
+}
+.answer-content {
+  font-size: clamp(.94rem, 2.85vw, 1.24rem);
+}
+.scroll-cue {
+  position: absolute;
+  z-index: 3;
+  right: 50%;
+  bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 4px 14px rgba(20, 28, 45, .10);
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(50%, 6px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.scroll-cue.visible { opacity: 1; transform: translate(50%, 0); }
+.answer-viewport.is-scrollable {
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
+.session-face { background: var(--surface); }
+.session-card { touch-action: pan-x pan-y; }
+
+@media (max-width: 620px) {
+  .answer-content { font-size: clamp(.9rem, 3.7vw, 1.06rem); line-height: 1.45; }
+  .answer-shell .answer-viewport { padding-bottom: 25px; }
+  .scroll-cue { font-size: .64rem; }
+}
+.face-side { max-width: 58%; overflow: hidden; text-overflow: ellipsis; }

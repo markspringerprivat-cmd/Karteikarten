@@ -1,92 +1,71 @@
 # KartenWerk
 
-KartenWerk ist eine vollständig statische, mobil optimierte Karteikarten-Webanwendung. Sie kann direkt über GitHub Pages veröffentlicht werden. Alle Lernprojekte und Lernstände bleiben im lokalen Browserspeicher des verwendeten Geräts.
+KartenWerk ist eine statische, mobil optimierte Karteikarten-Webanwendung für GitHub Pages. Projekte und Lernstände werden ausschließlich im lokalen Browserspeicher des verwendeten Geräts gespeichert.
 
-## Startoberfläche
+## Neuer Projektassistent
 
-Die Startseite ist wie ein Smartphone-Startbildschirm aufgebaut:
+Der Assistent führt durch drei klar getrennte Schritte:
 
-1. **Einstellungen** – Hell-/Dunkelmodus, Gesamtsicherung, Wiederherstellung und Löschen lokaler Projekte.
-2. **Anleitung** – kompakte Erklärung des vollständigen Arbeitsablaufs.
-3. **Neues Projekt** – öffnet den mobilen Projektassistenten.
-4. **Projektkacheln** – jedes importierte Lernprojekt erscheint automatisch als eigene Kachel und öffnet den Lernbereich.
+1. **Aufbereitung wählen**
+   - **Normal:** möglichst wortlautnah und ohne unnötige Synonyme.
+   - **Advanced:** verständlicher erklärt, aber ohne externe Ergänzungen.
+   - **Folienmodus:** genau eine Karte pro Folie oder PDF-Seite.
+2. **Prompt kopieren und ChatGPT öffnen**
+   - Der kombinierte Button kopiert den fertigen Prompt und öffnet `chatgpt.com`.
+   - Ist die ChatGPT-App auf dem Gerät für den Link eingerichtet, kann sie sich öffnen; andernfalls wird die Webversion verwendet.
+   - Ein direkt eingegebener Lerntext wird automatisch in den kopierten Prompt eingesetzt.
+3. **Ergebnis importieren**
+   - Empfohlen: echte `.json`-Datei hochladen.
+   - Alternativ: `§§§`-Text einfügen.
 
-Auf Smartphones stehen die drei Systemkacheln immer gemeinsam in der ersten Reihe.
+## Ausdifferenzierte Kartenerstellung
 
-## Projektassistent
+### Normal und Advanced
 
-Die frühere lange Hauptseite wurde in einen geführten Drei-Schritt-Dialog verschoben:
+Zusätzlich kann die Kartengröße gewählt werden:
 
-1. JSON-Datei oder `§§§`-Textformat auswählen und den vorbereiteten Prompt kopieren.
-2. Den Prompt mit angehängten PDF-, Word-, PowerPoint-, Text- oder Bilddateien beziehungsweise direkt eingefügtem Text an ChatGPT senden.
-3. Die erzeugte JSON-/TXT-Datei hochladen oder die Textausgabe einfügen.
+- **Lernfreundlich:** eigenständig abfragbare Inhalte werden getrennt; zusammengehörige Merkmale dürfen auf einer Karte bleiben.
+- **Große Karten:** zusammenhängende Quellenabschnitte bleiben eher gemeinsam und werden nur an klaren Themenwechseln getrennt.
 
-Nach einem erfolgreichen Import schließt sich der Assistent. Das neue Projekt erscheint anschließend als Kachel auf der Startseite.
+### Folienmodus
 
-## Funktionen
+- **Vollständige Folie:** alle relevanten Inhalte werden übernommen. Die Anzahl der Stichpunkte ist nicht begrenzt.
+- **Kompakte Folie:** weiterhin exakt eine Karte pro Folie, aber Wiederholungen und Füllformulierungen dürfen verdichtet werden.
 
-- für Smartphone, Tablet und Desktop optimierte Oberfläche
-- appähnliches Kachelmenü mit großen Touch-Flächen
-- bildschirmfüllender Projektassistent auf Mobilgeräten
-- vorbereiteter ChatGPT-Prompt für Anhänge und direkt eingefügten Text
-- verbindliche Anforderung einer herunterladbaren JSON-Datei im JSON-Modus
-- zusätzlicher Textimport mit `§§§` als Kartentrenner
-- automatische Projekt- und Themenstruktur
-- automatisch erzeugtes Inhaltsverzeichnis
-- Lernmodus: Vorder- und Rückseite gemeinsam
-- Abfragemodus: Karte antippen und umdrehen
-- Markierung „Gewusst“ oder „Noch einmal“
-- lokale Speicherung über `localStorage`
-- Einzelprojekt-Export, Gesamtsicherung und Wiederherstellung
-- Hell- und Dunkelmodus
-- Web-App-Manifest und eigenes App-Symbol
-- keine externen Bibliotheken, kein Server und keine Anmeldung
+Lange Rückseiten werden nicht künstlich verkleinert. Nur der Inhalt innerhalb der Karte scrollt; die Lernseite selbst bleibt auf die Bildschirmhöhe begrenzt.
 
-## Verwendung mit ChatGPT
+## Verbessertes JSON-Format
 
-### JSON-Modus – empfohlen
+Das aktuelle Schema unterstützt:
 
-1. Auf der Startseite **Neues Projekt** antippen.
-2. **JSON-Datei** auswählen und den Prompt kopieren.
-3. Den Prompt in ChatGPT einfügen.
-4. Den Lerntext direkt ergänzen oder PDF-, Word-, PowerPoint-, Text- beziehungsweise Bilddateien anhängen. Anhänge und Text können gemeinsam verwendet werden.
-5. ChatGPT soll eine echte Datei nach dem Muster `kartenwerk-kurztitel.json` erzeugen. Der JSON-Inhalt soll nicht in den Chat geschrieben werden.
-6. Die heruntergeladene Datei im dritten Schritt des Projektassistenten hochladen.
+- Schema-Version und gewählten Erstellungsmodus
+- stabile Karten-IDs
+- Absätze
+- Zwischenüberschriften
+- ungeordnete und nummerierte Listen
+- Tabellen
+- optionale Datei-, Seiten- und Folienangaben
 
-### §§§-Textmodus
-
-Bei diesem alternativen Weg wird das Ergebnis als normaler Chattext ausgegeben. Der Text wird kopiert und im dritten Schritt unter **Text einfügen** eingesetzt.
-
-## GitHub Pages veröffentlichen
-
-1. Den Inhalt dieses Ordners in das Stammverzeichnis eines GitHub-Repositories hochladen.
-2. In GitHub **Settings → Pages** öffnen.
-3. **Deploy from a branch** auswählen.
-4. Branch `main` und Ordner `/ (root)` festlegen.
-5. Speichern und die anschließend angezeigte GitHub-Pages-Adresse öffnen.
-
-## Lokale Speicherung
-
-Die Anwendung sendet selbst keine Lerninhalte an einen Server. Zu beachten ist:
-
-- Projekte sind nur in dem Browser und auf dem Gerät vorhanden, auf dem sie importiert wurden.
-- Das Löschen von Browserdaten kann die Projekte entfernen.
-- Unter **Einstellungen → Alle Projekte sichern** kann eine Gesamtsicherung erstellt werden.
-- Die Sicherung kann später über **Sicherung einlesen** wiederhergestellt werden.
-- GitHub speichert nur die Programmdateien, nicht die Lernprojekte der Nutzer.
-
-## Empfohlenes Importformat
+Beispiel:
 
 ```json
 {
-  "projectTitle": "Titel",
+  "schemaVersion": 3,
+  "generationMode": "slides",
+  "modeVariant": "full",
+  "projectTitle": "Vorlesung Forschungsmethoden",
   "sections": [
     {
-      "title": "Oberthema",
+      "title": "Forschungsdesign",
       "cards": [
         {
-          "front": "Frage oder Begriff",
-          "back": "Erklärung"
+          "id": "card-001",
+          "front": "Zeitdimensionen",
+          "back": [
+            { "type": "heading", "text": "Untersuchungsformen" },
+            { "type": "list", "style": "unordered", "items": ["Querschnitt", "Trendstudie", "Panelstudie"] }
+          ],
+          "source": { "file": "vorlesung.pptx", "page": null, "slide": 7 }
         }
       ]
     }
@@ -94,12 +73,42 @@ Die Anwendung sendet selbst keine Lerninhalte an einen Server. Zu beachten ist:
 }
 ```
 
+## Lernfunktionen
+
+- Lernmodus
+- Abfragemodus mit Richtig-/Falsch-Tracking
+- Nachlernen falsch beantworteter Karten
+- Kategorien einzeln oder gemeinsam auswählen
+- Karte antippen zum Umdrehen
+- horizontal wischen für vorherige/nächste Karte
+- vertikal innerhalb langer Rückseiten scrollen
+- breite Tabellen innerhalb der Karte horizontal wischen
+- optional sichtbare Quellenangabe
+- lokale Speicherung des Lernstands
+
+## GitHub Pages veröffentlichen
+
+1. Den Inhalt dieses Ordners in das Stammverzeichnis eines GitHub-Repositories hochladen.
+2. In GitHub **Settings → Pages** öffnen.
+3. **Deploy from a branch** auswählen.
+4. Branch `main` und Ordner `/ (root)` festlegen.
+5. Speichern.
+
+## Lokale Speicherung
+
+- Die Anwendung selbst sendet keine Lernprojekte an einen Server.
+- Projekte liegen nur im jeweiligen Browser und Gerät.
+- Das Löschen von Browserdaten kann Projekte entfernen.
+- Unter **Einstellungen** können alle Projekte gesichert und später wieder eingelesen werden.
+
 ## Dateien
 
-- `index.html` – Grundstruktur und Dialoge
-- `styles.css` – vollständiges responsives Kachel- und Lerndesign
-- `app.js` – Import, lokale Speicherung, Projekte, Assistent und Lernlogik
-- `manifest.webmanifest` – Metadaten für die Web-App-Darstellung
-- `icon.svg` – App- und Browser-Symbol
-- `sample-cards.json` – direkt importierbares Beispielprojekt
-- `README.md` – Einrichtung und Dokumentation
+- `index.html` – Startseite und Dialoggrundstruktur
+- `styles.css` – responsives, minimalistisches App-Layout
+- `app.js` – Prompt-Assistent, Import, Projekte und lokale Speicherung
+- `study.html` – separate Vollbild-Lernansicht
+- `study.css` – scrollfreie Lernseite mit scrollbareren Karteninhalten
+- `study.js` – Lern-, Abfrage- und Nachlernlogik
+- `rich-content.js` – strukturierte Darstellung von Absätzen, Listen und Tabellen
+- `sample-cards.json` – direkt importierbares Beispiel im Schema 3
+- `manifest.webmanifest` und `icon.svg` – Web-App-Metadaten

@@ -2,60 +2,99 @@
 
 const STORAGE_KEY = 'kartenwerk.projects.v1';
 const THEME_KEY = 'kartenwerk.theme.v1';
-const APP_VERSION = 2;
+const APP_VERSION = 3;
+const CHATGPT_URL = 'https://chatgpt.com/';
 
 const CARD_CREATION_MODES = {
   normal: {
     label: 'Normal',
-    short: 'So nah wie möglich an der Quelle',
+    short: 'Wortlaut und Fachbegriffe bewahren',
     infoTitle: 'Normaler Modus',
-    infoText: 'Die Karten übernehmen Fachbegriffe, Definitionen und Formulierungen möglichst wortlautnah. Die KI darf nur minimal kürzen oder grammatisch an Frage und Antwort anpassen. Synonyme, Vereinfachungen und freie Umschreibungen sollen vermieden werden.',
+    infoText: 'Dieser Modus bleibt so nah wie möglich an der Quelle. Fachbegriffe, Definitionen, Reihenfolge und charakteristische Formulierungen werden übernommen. Nur die kleinste notwendige grammatische Anpassung ist erlaubt.',
     prompt: `NORMALER MODUS – VERBINDLICH:
-- Orientiere jede Karte so nah wie möglich am genauen Wortlaut der Quelle.
+- Verwende zuerst den exakten Wortlaut der Quelle.
 - Übernimm Fachbegriffe, Definitionen, Kernaussagen, Aufzählungen und charakteristische Formulierungen möglichst wörtlich.
-- Verwende keine Synonyme, wenn der ursprüngliche Begriff aus der Quelle übernommen werden kann.
-- Formuliere Inhalte nicht frei um und vereinfache sie nicht eigenständig.
-- Erlaubt sind nur minimale grammatische Anpassungen, die nötig sind, um aus dem Quelleninhalt eine eindeutige Vorderseite und eine lesbare Rückseite zu bilden.
-- Kürzungen dürfen nur durch das Weglassen unwesentlicher Wiederholungen erfolgen; der verbleibende Inhalt soll sprachlich möglichst unverändert bleiben.
-- Ergänze keine Erklärungen, Beispiele, Bewertungen oder Informationen, die nicht ausdrücklich in der Quelle stehen.
-- Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karte.
-- Teile überladene Inhalte auf mehrere Karten auf, ohne den verbleibenden Wortlaut unnötig umzuschreiben.`
+- Ersetze keinen Fachbegriff durch ein Synonym, wenn der Quellenbegriff übernommen werden kann.
+- Ändere eine Formulierung nur, wenn sie ohne den ursprünglichen Satzkontext unverständlich wäre. Nimm dann ausschließlich die kleinste notwendige grammatische Anpassung vor.
+- Vereinfache, erkläre oder interpretiere nicht eigenständig.
+- Ergänze keine Beispiele, Bewertungen, Ursachen, Folgen oder Informationen, die nicht ausdrücklich aus der Quelle hervorgehen.
+- Unvollständige Stichpunkte dürfen sprachlich geordnet, aber nicht inhaltlich ergänzt werden.`
   },
   advanced: {
     label: 'Advanced',
-    short: 'Leicht verständlich erklärt',
+    short: 'Verständlich erklären, ohne Neues zu erfinden',
     infoTitle: 'Advanced-Modus',
-    infoText: 'Die KI bereitet den Quelleninhalt verständlicher auf, erklärt schwierige Begriffe und nutzt klarere Sätze. Sie darf umformulieren, aber keine neuen Fachinformationen oder fremden Beispiele ergänzen.',
+    infoText: 'Dieser Modus bereitet den Quelleninhalt verständlicher auf. Schwierige Sätze dürfen vereinfacht und Fachbegriffe im vorhandenen Zusammenhang erklärt werden. Externe Informationen oder erfundene Beispiele bleiben ausgeschlossen.',
     prompt: `ADVANCED-MODUS – VERBINDLICH:
-- Bereite die Inhalte leicht verständlich, klar und lernfreundlich auf.
-- Erkläre schwierige Fachbegriffe kurz in ihrem jeweiligen Zusammenhang.
-- Löse unnötig komplizierte Satzstrukturen auf und formuliere verständlicher, ohne den fachlichen Sinn zu verändern.
-- Du darfst den Wortlaut der Quelle behutsam umformulieren, musst aber alle zentralen Fachbegriffe und Kernaussagen erhalten.
-- Ergänze keine externen Informationen, keine recherchierten Inhalte und keine Beispiele, die nicht aus der Quelle hervorgehen.
-- Falls die Quelle selbst Beispiele, Abgrenzungen oder Zusammenhänge enthält, nutze sie zur verständlichen Erklärung.
-- Kennzeichne Unsicherheiten der Quelle nicht durch erfundene Präzisierungen.
-- Erstelle pro klar abgrenzbarem Begriff, Konzept, Modell, Argument oder Zusammenhang genau eine Karte.
-- Teile überladene Inhalte auf mehrere überschaubare Karten auf und vermeide unnötige Wiederholungen.`
+- Bereite die Inhalte klar, leicht verständlich und lernfreundlich auf.
+- Erhalte alle zentralen Fachbegriffe und den fachlichen Sinn der Quelle.
+- Löse unnötig komplizierte Satzstrukturen auf und erkläre schwierige Begriffe kurz in dem Zusammenhang, der aus der Quelle erkennbar ist.
+- Erkläre ausschließlich durch sprachliche Vereinfachung und durch Zusammenhänge, die in der Quelle ausdrücklich erkennbar sind.
+- Ergänze keine externen Informationen, keine recherchierten Inhalte, keine fremden Beispiele und keine nur plausibel klingenden Folgerungen.
+- Beispiele, Abgrenzungen und Begründungen dürfen nur verwendet werden, wenn sie in der Quelle enthalten sind.
+- Kennzeichne Lücken oder Unklarheiten nicht durch erfundene Präzisierungen.`
   },
   slides: {
     label: 'Folienmodus',
-    short: 'Genau eine Karte pro Folie',
+    short: 'Eine Folie bleibt genau eine Karte',
     infoTitle: 'Folienmodus',
-    infoText: 'Dieser Modus ist für PowerPoint- oder folienartige PDF-Dateien gedacht. Jede Folie wird in der ursprünglichen Reihenfolge zu genau einer Karte. Folien werden weder zusammengelegt noch auf mehrere Karten verteilt.',
+    infoText: 'Dieser Modus ist für PowerPoint-Dateien und folienartige PDFs gedacht. Jede Folie beziehungsweise Seite bleibt genau eine Karte. Lange Inhalte werden in KartenWerk innerhalb der Karte gescrollt.',
     prompt: `FOLIENMODUS – VERBINDLICH:
-- Dieser Modus ist vor allem für PowerPoint-Präsentationen und folienartige PDF-Dateien bestimmt.
-- Erstelle für jede einzelne Folie beziehungsweise PDF-Seite genau eine Karteikarte und bewahre die ursprüngliche Reihenfolge vollständig.
-- Lege niemals mehrere Folien zu einer Karte zusammen und teile niemals eine Folie auf mehrere Karten auf.
-- Auch Titel-, Inhaltsverzeichnis-, Übergangs- und Abschlussfolien werden als eigene Karte übernommen, sofern sie Bestandteil der Quelle sind.
-- Die Vorderseite enthält vorrangig den exakten Folientitel. Hat eine Folie keinen erkennbaren Titel, verwende „Folie X“ mit der tatsächlichen Foliennummer.
-- Die Rückseite enthält den gesamten inhaltlich relevanten Text dieser Folie in seiner ursprünglichen Reihenfolge. Aufzählungen und Fachbegriffe sollen möglichst wortlautnah erhalten bleiben.
-- Bei Diagrammen, Tabellen oder Abbildungen übernimm nur eindeutig erkennbare Beschriftungen, Werte und Aussagen. Erfinde keine Interpretation.
-- Bilde die Oberthemen aus vorhandenen Präsentationsabschnitten oder erkennbaren thematischen Blöcken, ohne zusätzliche Karten zu erzeugen.
-- Die Anzahl der Karten muss exakt der Anzahl der Folien beziehungsweise Seiten entsprechen.`
+- Dieser Modus ist für PowerPoint-Präsentationen und folienartige PDF-Dateien bestimmt.
+- Erstelle für jede einzelne Folie beziehungsweise PDF-Seite genau eine Karte und bewahre die ursprüngliche Reihenfolge.
+- Lege niemals mehrere Folien zusammen und teile niemals eine Folie aufgrund ihrer Länge auf mehrere Karten auf.
+- Die Vorderseite enthält den exakten Folientitel. Fehlt ein Titel, verwende „Folie X“ beziehungsweise „Seite X“ mit der tatsächlichen Nummer.
+- Bewahre Überschriften, Unterüberschriften, Absätze, Hauptpunkte, Unterpunkte, Nummerierungen und Tabellen in ihrer erkennbaren Reihenfolge und Hierarchie.
+- Bei Diagrammen und Abbildungen übernimm nur eindeutig erkennbare Beschriftungen, Werte und ausdrücklich dargestellte Aussagen. Erfinde keine Interpretation.
+- Bilde Oberthemen aus vorhandenen Präsentationsabschnitten oder klar erkennbaren thematischen Blöcken, ohne zusätzliche Karten zu erzeugen.
+- Die Anzahl der Karten muss der Anzahl der berücksichtigten Folien beziehungsweise Seiten entsprechen.`
   }
 };
 
-const JSON_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen, karteikartengerechten Lernkartensatz für die Webanwendung „KartenWerk“.
+const CARD_SIZE_OPTIONS = {
+  learning: {
+    label: 'Lernfreundlich',
+    short: 'Eigenständige Inhalte getrennt abfragen',
+    prompt: `KARTENAUFTEILUNG – LERNFREUNDLICH:
+- Jede Karte behandelt genau eine eigenständig abfragbare Wissenseinheit.
+- Teile Inhalte auf, wenn mehrere voneinander unabhängige Fragen, Definitionen, Modelle oder Argumente enthalten sind.
+- Teile eine Karte nicht allein deshalb auf, weil die Rückseite lang ist. Zusammengehörige Merkmale, Schritte oder Bestandteile dürfen auf einer scrollbaren Karte bleiben.
+- Die Vorderseite darf die Antwort nicht vorwegnehmen.`
+  },
+  large: {
+    label: 'Große Karten',
+    short: 'Zusammenhängende Quellenblöcke erhalten',
+    prompt: `KARTENAUFTEILUNG – GROSSE KARTEN:
+- Erhalte zusammenhängende Quellenabschnitte möglichst als gemeinsame Karte.
+- Teile nur an klaren Themenwechseln oder wenn Inhalte fachlich unabhängig voneinander sind.
+- Kürze oder teile nicht nur, um eine Karte an die Bildschirmgröße anzupassen. KartenWerk stellt lange Rückseiten scrollbar dar.
+- Die Vorderseite muss den gesamten zusammenhängenden Inhalt eindeutig ankündigen.`
+  }
+};
+
+const SLIDE_DETAIL_OPTIONS = {
+  full: {
+    label: 'Vollständige Folie',
+    short: 'Alle relevanten Inhalte übernehmen',
+    prompt: `FOLIENÜBERNAHME – VOLLSTÄNDIG:
+- Übernimm den gesamten inhaltlich relevanten Text jeder Folie beziehungsweise Seite.
+- Kürze den Inhalt nicht und lasse keinen Punkt nur wegen der Länge weg.
+- Die Anzahl der Inhaltsblöcke und Stichpunkte ist nicht begrenzt.
+- Lange Karten sind ausdrücklich erlaubt und werden in KartenWerk innerhalb der Karte gescrollt.
+- Auch Titel-, Inhaltsverzeichnis-, Übergangs- und Abschlussfolien werden übernommen, sofern sie Bestandteil der Quelle sind.`
+  },
+  compact: {
+    label: 'Kompakte Folie',
+    short: 'Eine Karte pro Folie, sprachlich verdichtet',
+    prompt: `FOLIENÜBERNAHME – KOMPAKT:
+- Jede Folie beziehungsweise Seite bleibt weiterhin genau eine Karte.
+- Verdichte Wiederholungen und unnötige Füllformulierungen, ohne Kernaussagen, Fachbegriffe, Zahlen, Schritte oder Abgrenzungen zu verlieren.
+- Fasse nur Inhalte derselben Folie zusammen. Vermische niemals verschiedene Folien.
+- Titel-, reine Übergangs- und Abschlussfolien bleiben eigene Karten, dürfen aber sehr kurz sein.`
+  }
+};
+
+const JSON_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen Lernkartensatz für die Webanwendung „KartenWerk“.
 
 QUELLE ERKENNEN:
 - Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen.
@@ -63,88 +102,123 @@ QUELLE ERKENNEN:
 - Falls Anhänge und eingefügter Text vorhanden sind, berücksichtige beides gemeinsam, sofern nichts anderes angegeben ist.
 - Falls mehrere Dateien angehängt sind, werte alle relevanten Dateien gemeinsam aus.
 - Verwende ausschließlich Informationen aus der bereitgestellten Quelle. Erfinde, ergänze oder recherchiere nichts.
+- Kann ein Teil der Quelle technisch nicht gelesen werden, erfinde keinen Ersatz. Verarbeite nur sicher erkennbare Inhalte.
+
+PRIORITÄTEN BEI WIDERSPRÜCHEN:
+1. Verwende ausschließlich Informationen aus der Quelle.
+2. Bewahre den fachlichen Sinn vollständig und korrekt.
+3. Befolge die Regeln des ausgewählten Aufbereitungsmodus und der gewählten Kartenaufteilung.
+4. Bewahre erkennbare Gliederungen, Listen, Tabellen und Reihenfolgen.
+5. Formuliere so knapp wie möglich, ohne eine höhere Priorität zu verletzen.
+
+{{MODE_RULES}}
+
+{{VARIANT_RULES}}
 
 INHALTLICHE VORGABEN:
-1. Bestimme einen aussagekräftigen Titel für das gesamte Lernprojekt.
-2. Ordne den Inhalt in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
-3. Befolge bei Bildung, Reihenfolge und Anzahl der Karten strikt die Regeln des oben gewählten Aufbereitungsmodus.
-4. Die Vorderseite „front“ enthält eine eindeutige Frage oder einen präzisen Begriff.
-5. Die Rückseite „back“ ist KEIN einfacher Fließtext, sondern immer eine Liste strukturierter Inhaltsblöcke.
-6. Übertrage die sichtbare Struktur der Quelle: Absätze als Absatzblöcke, Stichpunkte als Listenblöcke, nummerierte Schritte als nummerierte Listen und Tabellen als Tabellenblöcke.
-7. Nutze Tabellen nur, wenn die Quelle tatsächlich eine Tabelle oder eine eindeutig tabellarische Gegenüberstellung enthält. Übernimm Überschriften, Zeilen und Spalten in der ursprünglichen Reihenfolge.
-8. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
-9. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
-10. Formuliere knapp, aber vollständig.
+1. Bestimme einen aussagekräftigen Titel für das Lernprojekt.
+2. Ordne die Karten in sinnvolle Oberthemen. Diese Oberthemen bilden in KartenWerk das Inhaltsverzeichnis.
+3. Die Vorderseite „front“ enthält eine eindeutige Frage, einen präzisen Begriff oder im Folienmodus den Folientitel.
+4. Die Rückseite „back“ ist immer ein Array aus strukturierten Inhaltsblöcken.
+5. Übertrage die sichtbare Struktur der Quelle: Zwischenüberschriften als Überschriftenblöcke, Absätze als Absatzblöcke, Stichpunkte als Listenblöcke, nummerierte Schritte als nummerierte Listen und Tabellen als Tabellenblöcke.
+6. Nutze Tabellen nur, wenn die Quelle tatsächlich eine Tabelle oder eine eindeutig tabellarische Gegenüberstellung enthält. Übernimm Überschriften, Zeilen und Spalten in der ursprünglichen Reihenfolge.
+7. Lange Rückseiten sind erlaubt. Kürze, teile oder verkleinere Inhalte nicht allein aufgrund einer angenommenen Bildschirmhöhe; KartenWerk scrollt den Karteninhalt.
+8. Übernimm nach Möglichkeit die Fundstelle jeder Karte. Verwende nur tatsächlich erkennbare Datei-, Seiten- oder Folienangaben.
 
 ZULÄSSIGE INHALTSBLÖCKE FÜR „back“:
+- Zwischenüberschrift: { "type": "heading", "text": "Überschrift innerhalb der Rückseite" }
 - Absatz: { "type": "paragraph", "text": "Ein zusammenhängender Absatz ohne Aufzählungszeichen." }
 - Ungeordnete Stichpunktliste: { "type": "list", "style": "unordered", "items": ["Erster Stichpunkt", "Zweiter Stichpunkt"] }
 - Nummerierte Liste: { "type": "list", "style": "ordered", "items": ["Erster Schritt", "Zweiter Schritt"] }
 - Tabelle: { "type": "table", "headers": ["Spalte 1", "Spalte 2"], "rows": [["Zelle 1", "Zelle 2"], ["Zelle 3", "Zelle 4"]] }
 
-FORMATREGELN FÜR INHALTSBLÖCKE – SEHR WICHTIG:
-- „back“ muss bei jeder Karte ein JSON-Array sein, auch wenn die Rückseite nur aus einem einzigen Absatz besteht.
-- Schreibe niemals Aufzählungszeichen wie •, -, * oder Nummern direkt in einen Absatztext. Verwende dafür einen Listenblock.
+FORMATREGELN FÜR INHALTSBLÖCKE:
+- „back“ muss bei jeder Karte ein JSON-Array sein, auch wenn die Rückseite nur einen Absatz enthält.
+- Schreibe Aufzählungszeichen wie •, -, * oder Nummern niemals direkt in einen Absatztext. Verwende dafür einen Listenblock.
 - Speichere jeden Stichpunkt als eigenes Element in „items“.
-- Verwende in Textfeldern keine Zeichenfolgen wie \\n, \\r oder <br>. Erzeuge keine künstlichen Zeilenumbrüche innerhalb eines Textfeldes.
-- Verwende kein Markdown, kein HTML und keine Codeblöcke innerhalb der Karteninhalte.
+- Verwende in Textfeldern keine sichtbaren Zeichenfolgen wie \\n, \\r oder <br>.
+- Verwende innerhalb der Karteninhalte kein Markdown, kein HTML und keine Codeblöcke.
 - Jede Tabellenzeile muss gleich viele Zellen besitzen wie die Tabelle Spalten hat.
-- Leere Tabellenzellen dürfen als leere Zeichenfolge "" gespeichert werden.
-- Wenn eine Quelle keine Tabelle enthält, erfinde keine Tabelle.
+- Erfinde keine Tabelle, wenn die Quelle keine Tabelle oder klar tabellarische Gegenüberstellung enthält.
 
-VERBINDLICHES DATEIFORMAT:
-Erstelle den Inhalt exakt nach diesem JSON-Schema und verwende außerhalb der gezeigten Struktur keine zusätzlichen Schlüssel:
+VERBINDLICHES JSON-SCHEMA:
+Verwende exakt diese Struktur. Die Felder „page“ und „slide“ enthalten eine Zahl oder null. „file“ enthält den erkennbaren Dateinamen oder null.
 
 {
+  "schemaVersion": 3,
+  "generationMode": "{{MODE_KEY}}",
+  "modeVariant": "{{VARIANT_KEY}}",
   "projectTitle": "Aussagekräftiger Titel des Lernprojekts",
   "sections": [
     {
       "title": "Titel des Oberthemas",
       "cards": [
         {
-          "front": "Frage oder Begriff auf der Vorderseite",
+          "id": "card-001",
+          "front": "Frage, Begriff oder Folientitel",
           "back": [
+            { "type": "heading", "text": "Optionale Zwischenüberschrift" },
             { "type": "paragraph", "text": "Einleitende Erklärung." },
             { "type": "list", "style": "unordered", "items": ["Erster Stichpunkt", "Zweiter Stichpunkt"] },
             { "type": "table", "headers": ["Merkmal", "Bedeutung"], "rows": [["Beispiel A", "Erklärung A"], ["Beispiel B", "Erklärung B"]] }
-          ]
+          ],
+          "source": { "file": null, "page": null, "slide": null }
         }
       ]
     }
   ]
 }
 
+QUALITÄTSPRÜFUNG VOR DER DATEIERSTELLUNG:
+Prüfe jede Karte still und korrigiere Fehler vor der Ausgabe:
+- Ist die Vorderseite eindeutig und verrät sie die Antwort nicht unnötig?
+- Entspricht die Kartenteilung dem gewählten Modus und der gewählten Variante?
+- Ist jede Aussage aus der Quelle ableitbar?
+- Wurden Fachbegriffe im Normalmodus wortlautnah bewahrt?
+- Wurden im Advanced-Modus keine fremden Erklärungen oder Beispiele ergänzt?
+- Entspricht im Folienmodus jede Karte genau einer Folie beziehungsweise Seite?
+- Sind Listen, Zwischenüberschriften und Tabellen als eigene Blöcke gespeichert?
+- Gibt es leere, doppelte oder nahezu identische Karten?
+- Enthält kein Textfeld sichtbare \\n-, \\r-, HTML- oder Markdown-Steuerzeichen?
+- Besitzt jede Karte eine eindeutige ID im Muster card-001, card-002 und so weiter?
+- Ist das gesamte Dokument gültiges JSON ohne abschließende Kommas?
+
 DATEIAUSGABE – SEHR WICHTIG:
 1. Erstelle eine echte, herunterladbare UTF-8-Datei mit der Endung .json und dem MIME-Typ application/json.
 2. Benenne sie nach dem Muster „kartenwerk-kurztitel.json“. Verwende im Dateinamen nur Kleinbuchstaben, Zahlen und Bindestriche.
-3. Prüfe vor dem Bereitstellen, dass die Datei gültiges JSON enthält, alle Zeichen korrekt maskiert sind und nach dem jeweils letzten Element kein Komma steht.
-4. Prüfe zusätzlich, dass jede Rückseite ein Array aus den oben erlaubten Inhaltsblöcken ist und keine Zeichenfolge \\n als sichtbarer Text vorkommt.
-5. Stelle die fertige JSON-Datei als herunterladbaren Dateianhang beziehungsweise Download-Link bereit.
-6. Schreibe den JSON-Inhalt NICHT in den Chat, NICHT in einen Markdown-Codeblock und NICHT als Vorschau. Im Chat darf außer einem kurzen Hinweis auf die fertige Datei kein Karteninhalt erscheinen.
-7. Falls in dieser ChatGPT-Umgebung technisch keine Datei erstellt werden kann, gib nicht ersatzweise den JSON-Code im Chat aus, sondern teile nur knapp mit, dass keine Datei erzeugt werden konnte.
+3. Stelle die fertige JSON-Datei als herunterladbaren Dateianhang beziehungsweise Download-Link bereit.
+4. Schreibe den JSON-Inhalt NICHT in den Chat, NICHT in einen Markdown-Codeblock und NICHT als Vorschau.
+5. Im Chat darf außer einem kurzen Hinweis auf die fertige Datei kein Karteninhalt erscheinen.
+6. Falls in dieser ChatGPT-Umgebung technisch keine Datei erstellt werden kann, gib nicht ersatzweise den JSON-Code aus. Teile nur knapp mit, dass keine Datei erzeugt werden konnte.
 
 AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
 [TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
 
-const DELIMITER_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen, karteikartengerechten Lernkartensatz für die Webanwendung „KartenWerk“.
+const DELIMITER_PROMPT = `Erstelle aus der bereitgestellten Quelle einen vollständigen Lernkartensatz für die Webanwendung „KartenWerk“.
 
 QUELLE ERKENNEN:
-- Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen.
-- Sie kann alternativ direkt unter „AUSGANGSTEXT“ in diese Nachricht eingefügt sein.
-- Falls Anhänge und eingefügter Text vorhanden sind, berücksichtige beides gemeinsam, sofern nichts anderes angegeben ist.
-- Falls mehrere Dateien angehängt sind, werte alle relevanten Dateien gemeinsam aus.
-- Verwende ausschließlich Informationen aus der bereitgestellten Quelle. Erfinde, ergänze oder recherchiere nichts.
+- Die Quelle kann als angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddatei vorliegen oder direkt unter „AUSGANGSTEXT“ stehen.
+- Anhänge und eingefügten Text gemeinsam berücksichtigen, sofern nichts anderes angegeben ist.
+- Verwende ausschließlich sicher erkennbare Informationen aus der Quelle. Erfinde, ergänze oder recherchiere nichts.
+
+PRIORITÄTEN BEI WIDERSPRÜCHEN:
+1. Ausschließlich Quelleninformationen verwenden.
+2. Fachlichen Sinn vollständig bewahren.
+3. Gewählten Modus und gewählte Kartenaufteilung befolgen.
+4. Sichtbare Gliederung, Reihenfolge, Listen und Tabellen bewahren.
+5. So knapp wie möglich formulieren, ohne eine höhere Priorität zu verletzen.
+
+{{MODE_RULES}}
+
+{{VARIANT_RULES}}
 
 INHALTLICHE VORGABEN:
-1. Bestimme einen aussagekräftigen Titel für das gesamte Lernprojekt.
-2. Ordne die Karten in sinnvolle Oberthemen. Diese Oberthemen bilden später automatisch das Inhaltsverzeichnis.
-3. Befolge bei Bildung, Reihenfolge und Anzahl der Karten strikt die Regeln des oben gewählten Aufbereitungsmodus.
-4. Formuliere die Vorderseite als eindeutige Frage oder präzisen Begriff.
-5. Übertrage die sichtbare Struktur der Quelle: Absätze als normale Textzeilen, Stichpunkte als echte Listenzeilen und Tabellen als Markdown-Tabellen.
-6. Wichtige Definitionen, Merkmale, Zusammenhänge, Abgrenzungen und Beispiele aus der Quelle sollen erhalten bleiben.
-7. Vermeide unnötige Wiederholungen, sofern der gewählte Aufbereitungsmodus keine vollständige Folienübernahme verlangt.
+1. Bestimme einen Projekttitel und sinnvolle Oberthemen.
+2. Die Vorderseite ist eine eindeutige Frage, ein präziser Begriff oder im Folienmodus der Folientitel.
+3. Übertrage Absätze, Stichpunkte, nummerierte Schritte, Zwischenüberschriften und Tabellen erkennbar.
+4. Lange Rückseiten sind erlaubt. Kürze oder teile nicht allein wegen der Bildschirmgröße; KartenWerk scrollt den Inhalt.
 
-Gib das Ergebnis direkt als reinen Text im Chat aus. Verwende exakt dieses Grundformat:
+Gib das Ergebnis als reinen Text im Chat aus. Verwende exakt dieses Grundformat:
 
 PROJEKT: Titel des Lernprojekts
 
@@ -174,16 +248,22 @@ RÜCKSEITE:
 Nächste Erklärung
 
 FORMATREGELN:
-- Zwischen zwei Karten muss immer eine eigene Zeile mit genau drei Paragrafzeichen stehen: §§§
-- Vor und nach der Zeile mit §§§ muss jeweils eine Leerzeile stehen.
-- Wiederhole „THEMA:“ bei jeder Karte, auch wenn mehrere Karten zum selben Oberthema gehören.
-- Erzeuge echte Zeilenumbrüche. Schreibe niemals die sichtbaren Zeichenfolgen \\n oder \\r in den Text.
+- Zwischen zwei Karten steht eine eigene Zeile mit genau drei Paragrafzeichen: §§§
+- Vor und nach der §§§-Zeile steht jeweils eine Leerzeile.
+- Wiederhole „THEMA:“ bei jeder Karte.
+- Erzeuge echte Zeilenumbrüche. Schreibe niemals die sichtbaren Zeichenfolgen \\n oder \\r.
 - Jeder Stichpunkt beginnt in einer eigenen Zeile mit „- “.
 - Jeder nummerierte Punkt beginnt in einer eigenen Zeile mit „1. “, „2. “ und so weiter.
-- Tabellen werden als Markdown-Tabelle mit senkrechten Strichen und einer Trennzeile aus Bindestrichen ausgegeben.
-- Nutze eine Tabelle nur, wenn die Quelle tatsächlich eine Tabelle oder klar tabellarische Gegenüberstellung enthält.
+- Tabellen werden als Markdown-Tabelle mit senkrechten Strichen und einer Trennzeile ausgegeben.
 - Verwende keine Einleitung, keine Abschlussbemerkung und keine Markdown-Codeblöcke.
 - In diesem Textmodus soll keine Datei erstellt werden.
+
+PRÜFUNG VOR DER AUSGABE:
+- Keine erfundenen Informationen.
+- Keine leeren oder doppelten Karten.
+- Kartenteilung entspricht dem gewählten Modus.
+- Im Folienmodus entspricht jede Karte genau einer Folie beziehungsweise Seite.
+- Listen und Tabellen sind korrekt formatiert.
 
 AUSGANGSTEXT – nur verwenden, wenn der Inhalt nicht oder nicht vollständig als Anhang vorliegt:
 [TEXT ODER LERNZETTEL HIER EINFÜGEN. BEI VOLLSTÄNDIGEM DATEIANHANG KANN DIESER PLATZHALTER STEHEN BLEIBEN.]`;
@@ -193,6 +273,8 @@ const state = {
   importTab: 'file',
   promptMode: 'json',
   generationMode: 'normal',
+  cardSize: 'learning',
+  slideDetail: 'full',
   study: {
     projectId: null,
     section: 'all',
@@ -411,8 +493,8 @@ function openInstructionsDialog() {
     <div class="app-dialog-card">
       <header class="dialog-header">
         <div>
-          <p class="eyebrow">In drei Schritten</p>
-          <h2 id="appDialogTitle">So funktioniert KartenWerk</h2>
+          <p class="eyebrow">Kurzanleitung</p>
+          <h2 id="appDialogTitle">In drei Schritten zum Lernprojekt</h2>
         </div>
         <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
       </header>
@@ -420,20 +502,20 @@ function openInstructionsDialog() {
       <div class="instruction-list">
         <article class="instruction-card">
           <span>1</span>
-          <div><h3>Prompt kopieren</h3><p>Öffne über die Plus-Kachel den Projektassistenten. Wähle Normal, Advanced oder Folienmodus, entscheide dich für JSON oder §§§ und kopiere den passenden Prompt.</p></div>
+          <div><h3>Aufbereitung wählen</h3><p>Normal bleibt wortlautnah, Advanced erklärt verständlicher. Im Folienmodus bleibt jede Folie genau eine Karte. Zusätzlich bestimmst du Kartengröße oder Folienumfang.</p></div>
         </article>
         <article class="instruction-card">
           <span>2</span>
-          <div><h3>Quelle an ChatGPT senden</h3><p>Hänge PDF-, Word-, PowerPoint-, Text- oder Bilddateien an oder füge deinen Lerntext direkt unter den Prompt ein. Beides kann kombiniert werden.</p></div>
+          <div><h3>Prompt kopieren und ChatGPT öffnen</h3><p>Der kombinierte Button kopiert den fertigen Prompt und öffnet ChatGPT. Dort hängst du PDF, PowerPoint oder andere Quellen an und fügst den Prompt ein.</p></div>
         </article>
         <article class="instruction-card">
           <span>3</span>
-          <div><h3>Ergebnis importieren</h3><p>Im JSON-Modus lädst du die erzeugte Datei hoch. Im §§§-Modus kopierst du den Chattext in das Eingabefeld. Danach erscheint das Projekt als Kachel.</p></div>
+          <div><h3>Datei importieren</h3><p>Lade die erzeugte JSON-Datei in KartenWerk hoch. Alternativ kannst du den §§§-Textmodus verwenden. Danach erscheint das Projekt auf der Startseite.</p></div>
         </article>
       </div>
 
-      <div class="notice info"><strong>Empfehlung:</strong> JSON ist stabiler, weil Projekttitel, Oberthemen, Vorderseiten sowie Absätze, Listen und Tabellen eindeutig strukturiert sind.</div>
-      <button class="button full-width" id="instructionCreateProject" type="button">Jetzt Projekt erstellen</button>
+      <div class="notice info"><strong>Empfehlung:</strong> Nutze JSON. Dadurch bleiben Absätze, Überschriften, Listen, Tabellen und Quellenangaben strukturiert. Lange Karten können innerhalb der Karte gescrollt werden.</div>
+      <button class="button full-width" id="instructionCreateProject" type="button">Projektassistent öffnen</button>
     </div>`;
 
   showAppDialog();
@@ -441,10 +523,29 @@ function openInstructionsDialog() {
   document.getElementById('instructionCreateProject').addEventListener('click', () => openCreateProjectDialog());
 }
 
+function getSelectedVariant() {
+  if (state.generationMode === 'slides') {
+    return { key: state.slideDetail, ...(SLIDE_DETAIL_OPTIONS[state.slideDetail] || SLIDE_DETAIL_OPTIONS.full) };
+  }
+  return { key: state.cardSize, ...(CARD_SIZE_OPTIONS[state.cardSize] || CARD_SIZE_OPTIONS.learning) };
+}
+
 function getActivePrompt() {
-  const basePrompt = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
+  const template = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
   const mode = CARD_CREATION_MODES[state.generationMode] || CARD_CREATION_MODES.normal;
-  return basePrompt.replace('INHALTLICHE VORGABEN:', `AUFBEREITUNGSMODUS: ${mode.label.toUpperCase()}\n${mode.prompt}\n\nINHALTLICHE VORGABEN:`);
+  const variant = getSelectedVariant();
+  return template
+    .replaceAll('{{MODE_RULES}}', mode.prompt)
+    .replaceAll('{{VARIANT_RULES}}', variant.prompt)
+    .replaceAll('{{MODE_KEY}}', state.generationMode)
+    .replaceAll('{{VARIANT_KEY}}', variant.key);
+}
+
+function getPromptWithOptionalSource() {
+  const source = document.getElementById('sourceText')?.value.trim() || '';
+  const prompt = getActivePrompt();
+  if (!source) return prompt;
+  return prompt.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, () => source);
 }
 
 function renderPromptModeOptions() {
@@ -456,6 +557,48 @@ function renderPromptModeOptions() {
       </button>
       <button class="prompt-mode-help" data-mode-info="${key}" type="button" aria-label="${escapeHTML(mode.label)} erklären" title="Modus erklären">?</button>
     </div>`).join('');
+}
+
+function renderModeVariantOptions() {
+  const options = state.generationMode === 'slides' ? SLIDE_DETAIL_OPTIONS : CARD_SIZE_OPTIONS;
+  const selectedKey = state.generationMode === 'slides' ? state.slideDetail : state.cardSize;
+  const heading = state.generationMode === 'slides' ? 'Folienübernahme' : 'Kartengröße';
+  return `
+    <div class="variant-block">
+      <div class="variant-heading"><span class="mini-label">${heading}</span><span>Wie umfangreich soll eine Karte sein?</span></div>
+      <div class="variant-choice" role="radiogroup" aria-label="${heading}">
+        ${Object.entries(options).map(([key, option]) => `
+          <button class="variant-option ${selectedKey === key ? 'active' : ''}" data-mode-variant="${key}" type="button" role="radio" aria-checked="${selectedKey === key}">
+            <strong>${escapeHTML(option.label)}</strong>
+            <small>${escapeHTML(option.short)}</small>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function refreshPromptConfiguration() {
+  updatePromptModeSelection();
+  const variantHost = document.getElementById('modeVariantHost');
+  if (variantHost) variantHost.innerHTML = renderModeVariantOptions();
+  bindModeVariantButtons();
+  const preview = document.getElementById('promptPreview');
+  if (preview) preview.textContent = getActivePrompt();
+  const modeSummary = document.getElementById('selectedModeSummary');
+  if (modeSummary) {
+    const mode = CARD_CREATION_MODES[state.generationMode];
+    const variant = getSelectedVariant();
+    modeSummary.textContent = `${mode.label} · ${variant.label}`;
+  }
+}
+
+function bindModeVariantButtons() {
+  document.querySelectorAll('[data-mode-variant]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (state.generationMode === 'slides') state.slideDetail = button.dataset.modeVariant;
+      else state.cardSize = button.dataset.modeVariant;
+      refreshPromptConfiguration();
+    });
+  });
 }
 
 function updatePromptModeSelection() {
@@ -487,6 +630,8 @@ function openModeInfoDialog(modeKey) {
 
 function openCreateProjectDialog() {
   const prompt = getActivePrompt();
+  const selectedMode = CARD_CREATION_MODES[state.generationMode];
+  const selectedVariant = getSelectedVariant();
   appDialog.className = 'app-dialog create-dialog';
   appDialog.innerHTML = `
     <div class="app-dialog-card create-dialog-card">
@@ -498,64 +643,83 @@ function openCreateProjectDialog() {
         <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
       </header>
 
-      <div class="create-flow">
+      <div class="wizard-overview" aria-label="Ablauf">
+        <span><b>1</b> Prompt wählen</span>
+        <span><b>2</b> In ChatGPT erstellen</span>
+        <span><b>3</b> Ergebnis importieren</span>
+      </div>
+
+      <div class="create-flow simplified-flow">
         <section class="flow-step">
           <div class="flow-step-number">1</div>
           <div class="flow-step-content">
-            <h3>Modus und Ausgabe wählen</h3>
-            <p>Der gewählte Modus bestimmt, wie ChatGPT deine Quelle in Karten umwandelt. Ein Modus muss aktiv sein.</p>
+            <h3>Wie sollen die Karten erstellt werden?</h3>
+            <p>Wähle zuerst die Aufbereitung. Das Fragezeichen erklärt den Unterschied.</p>
 
             <fieldset class="prompt-mode-fieldset">
-              <legend>Modus</legend>
+              <legend>Aufbereitungsmodus</legend>
               <div class="prompt-mode-list" role="radiogroup" aria-label="Aufbereitungsmodus">
                 ${renderPromptModeOptions()}
               </div>
             </fieldset>
 
+            <div id="modeVariantHost">${renderModeVariantOptions()}</div>
+
             <div class="output-format-block">
               <span class="mini-label">Ausgabeformat</span>
-              <p>JSON ist der zuverlässigste Weg. Der alternative Textmodus verwendet §§§ als Kartentrenner.</p>
+              <p>JSON wird empfohlen: Listen, Tabellen und Überschriften bleiben eindeutig strukturiert.</p>
               <div class="format-choice" role="group" aria-label="Ausgabeformat">
-                <button class="choice-button ${state.promptMode === 'json' ? 'active' : ''}" data-create-prompt-mode="json" type="button">JSON-Datei</button>
+                <button class="choice-button ${state.promptMode === 'json' ? 'active' : ''}" data-create-prompt-mode="json" type="button">JSON-Datei <small>empfohlen</small></button>
                 <button class="choice-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-create-prompt-mode="delimiter" type="button">§§§-Text</button>
               </div>
             </div>
-
-            <details class="prompt-details">
-              <summary>Prompt ansehen</summary>
-              <pre class="prompt-preview" id="promptPreview">${escapeHTML(prompt)}</pre>
-            </details>
-
-            <div class="field">
-              <label class="label" for="sourceText">Ausgangstext direkt ergänzen <span class="optional">optional</span></label>
-              <textarea class="textarea source-textarea" id="sourceText" placeholder="Nur nötig, wenn du den Text nicht als Datei an ChatGPT anhängst."></textarea>
-            </div>
-
-            <div class="button-row mobile-stack">
-              <button class="button" id="copyPromptButton" type="button">Prompt kopieren</button>
-              <button class="button ghost" id="copyPromptWithSourceButton" type="button">Prompt + Text kopieren</button>
-            </div>
-            <div class="notice info" id="formatNotice">${state.promptMode === 'json'
-              ? 'ChatGPT erstellt eine .json-Datei mit getrennten Blöcken für Absätze, Listen und Tabellen.'
-              : 'ChatGPT gibt §§§-Text mit echten Zeilenumbrüchen, Listen und Markdown-Tabellen aus.'}</div>
           </div>
         </section>
 
-        <section class="flow-step">
+        <section class="flow-step prompt-action-step">
           <div class="flow-step-number">2</div>
           <div class="flow-step-content">
-            <h3>In ChatGPT verarbeiten</h3>
-            <p>Füge den Prompt in ChatGPT ein. Hänge deine PDF, Word-, PowerPoint-, Text- oder Bilddatei an oder verwende den direkt ergänzten Text. Sende anschließend den Auftrag ab.</p>
+            <h3>Prompt an ChatGPT übergeben</h3>
+            <p>Hänge die Quelle anschließend in ChatGPT an. Einen direkt eingefügten Lerntext kannst du schon hier ergänzen.</p>
+
+            <div class="selected-mode-card">
+              <span>Gewählt</span>
+              <strong id="selectedModeSummary">${escapeHTML(selectedMode.label)} · ${escapeHTML(selectedVariant.label)}</strong>
+            </div>
+
+            <div class="field">
+              <label class="label" for="sourceText">Lerntext direkt ergänzen <span class="optional">optional</span></label>
+              <textarea class="textarea source-textarea" id="sourceText" placeholder="Leer lassen, wenn du PDF, PowerPoint oder eine andere Datei erst in ChatGPT anhängst."></textarea>
+              <p class="field-help">Ist hier Text eingetragen, wird er beim Kopieren automatisch in den Prompt eingesetzt.</p>
+            </div>
+
+            <div class="prompt-primary-actions">
+              <button class="button full-width chatgpt-button" id="copyAndOpenChatGPTButton" type="button">
+                <span aria-hidden="true">↗</span> Prompt kopieren &amp; ChatGPT öffnen
+              </button>
+              <button class="button ghost full-width" id="copyPromptButton" type="button">Nur Prompt kopieren</button>
+            </div>
+            <p class="opening-note">Ist die ChatGPT-App für den Link eingerichtet, kann sie sich öffnen. Andernfalls öffnet sich ChatGPT im Browser.</p>
+
+            <details class="prompt-details">
+              <summary>Erzeugten Prompt ansehen</summary>
+              <pre class="prompt-preview" id="promptPreview">${escapeHTML(prompt)}</pre>
+            </details>
+
+            <div class="notice info" id="formatNotice">${state.promptMode === 'json'
+              ? 'ChatGPT soll eine echte .json-Datei erzeugen. Diese lädst du anschließend unten in KartenWerk hoch.'
+              : 'ChatGPT gibt formatierten §§§-Text aus. Diesen kopierst du anschließend unten in KartenWerk.'}</div>
           </div>
         </section>
 
         <section class="flow-step import-step">
           <div class="flow-step-number">3</div>
           <div class="flow-step-content">
-            <h3>Fertigen Kartensatz importieren</h3>
+            <h3>Ergebnis in KartenWerk importieren</h3>
+            <p>Lade die JSON-Datei hoch oder füge die Textausgabe ein. Danach erscheint das Projekt automatisch auf der Startseite.</p>
             <div class="field">
-              <label class="label" for="projectTitleOverride">Projektname <span class="optional">optional</span></label>
-              <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Überschreibt den automatisch erkannten Titel">
+              <label class="label" for="projectTitleOverride">Eigener Projektname <span class="optional">optional</span></label>
+              <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Sonst wird der Titel aus der Datei übernommen">
             </div>
 
             <div class="import-tabs" role="tablist" aria-label="Importart">
@@ -565,7 +729,7 @@ function openCreateProjectDialog() {
 
             <div id="fileImport" class="${state.importTab === 'file' ? '' : 'hidden'}">
               <label class="dropzone mobile-dropzone" id="dropzone" for="fileInput">
-                <span class="dropzone-icon" aria-hidden="true">⇧</span>
+                <span class="dropzone-icon" aria-hidden="true">＋</span>
                 <div><strong>JSON- oder TXT-Datei auswählen</strong><span>Antippen oder Datei hier ablegen</span></div>
               </label>
               <input class="hidden" id="fileInput" type="file" accept=".json,.txt,application/json,text/plain">
@@ -575,7 +739,7 @@ function openCreateProjectDialog() {
               <label class="label" for="importText">ChatGPT-Ausgabe</label>
               <textarea class="textarea import-textarea" id="importText" spellcheck="false" placeholder="§§§-Text oder vorhandenen JSON-Inhalt einfügen …"></textarea>
               <div class="button-row mobile-stack">
-                <button class="button ghost" id="pasteClipboardButton" type="button">Zwischenablage einfügen</button>
+                <button class="button ghost" id="pasteClipboardButton" type="button">Aus Zwischenablage</button>
                 <button class="button" id="importTextButton" type="button">Projekt erstellen</button>
               </div>
             </div>
@@ -593,10 +757,11 @@ function bindCreateDialogEvents() {
   document.querySelectorAll('[data-generation-mode]').forEach((button) => {
     button.addEventListener('click', () => {
       state.generationMode = button.dataset.generationMode;
-      updatePromptModeSelection();
-      document.getElementById('promptPreview').textContent = getActivePrompt();
+      refreshPromptConfiguration();
     });
   });
+
+  bindModeVariantButtons();
 
   document.querySelectorAll('[data-mode-info]').forEach((button) => {
     button.addEventListener('click', (event) => {
@@ -612,8 +777,8 @@ function bindCreateDialogEvents() {
       document.querySelectorAll('[data-create-prompt-mode]').forEach((item) => item.classList.toggle('active', item === button));
       document.getElementById('promptPreview').textContent = getActivePrompt();
       document.getElementById('formatNotice').textContent = state.promptMode === 'json'
-        ? 'ChatGPT erstellt eine .json-Datei mit getrennten Blöcken für Absätze, Listen und Tabellen.'
-        : 'ChatGPT gibt §§§-Text mit echten Zeilenumbrüchen, Listen und Markdown-Tabellen aus.';
+        ? 'ChatGPT soll eine echte .json-Datei erzeugen. Diese lädst du anschließend unten in KartenWerk hoch.'
+        : 'ChatGPT gibt formatierten §§§-Text aus. Diesen kopierst du anschließend unten in KartenWerk.';
       setImportTab(state.importTab);
     });
   });
@@ -623,29 +788,35 @@ function bindCreateDialogEvents() {
   });
 
   document.getElementById('copyPromptButton').addEventListener('click', async () => {
-    await copyText(getActivePrompt());
-    toast('Prompt kopiert', 'Du kannst ihn jetzt in ChatGPT einfügen.');
+    try {
+      await copyText(getPromptWithOptionalSource());
+      toast('Prompt kopiert', 'Der ausgewählte Modus und ein eventuell eingetragener Lerntext wurden übernommen.');
+    } catch {
+      toast('Kopieren nicht möglich', 'Markiere den Prompt unter „Erzeugten Prompt ansehen“ und kopiere ihn manuell.');
+    }
   });
 
-  document.getElementById('copyPromptWithSourceButton').addEventListener('click', async () => {
-    const source = document.getElementById('sourceText').value.trim();
-    if (!source) {
-      toast('Kein Ausgangstext', 'Füge zuerst Text ein oder nutze „Prompt kopieren“ für einen Dateianhang.');
-      return;
+  document.getElementById('copyAndOpenChatGPTButton').addEventListener('click', async () => {
+    const promptText = getPromptWithOptionalSource();
+    const copyPromise = copyText(promptText);
+    const opened = window.open(CHATGPT_URL, '_blank');
+    if (opened) opened.opener = null;
+    try {
+      await copyPromise;
+      toast('Prompt kopiert', 'ChatGPT wird geöffnet. Füge den Prompt dort in das Eingabefeld ein.');
+    } catch {
+      toast('ChatGPT geöffnet', 'Der Prompt konnte nicht automatisch kopiert werden. Nutze „Nur Prompt kopieren“.');
     }
-    const base = getActivePrompt();
-    const combined = base.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, source);
-    await copyText(combined);
-    toast('Prompt mit Text kopiert', 'Der vollständige Auftrag liegt in der Zwischenablage.');
+    if (!opened) window.location.href = CHATGPT_URL;
   });
 
   document.getElementById('pasteClipboardButton').addEventListener('click', async () => {
     try {
       const text = await navigator.clipboard.readText();
       document.getElementById('importText').value = text;
-      toast('Zwischenablage eingefügt', 'Du kannst das Projekt jetzt erstellen.');
+      toast('Text eingefügt', 'Du kannst das Projekt jetzt erstellen.');
     } catch {
-      toast('Zugriff nicht möglich', 'Bitte halte das Feld gedrückt und füge den Text manuell ein.');
+      toast('Zugriff nicht möglich', 'Halte das Feld gedrückt und füge den Text manuell ein.');
     }
   });
 
@@ -720,6 +891,11 @@ function renderProject(projectId) {
   const repeat = Object.values(progress).filter((value) => value === 'repeat').length;
   const total = countCards(project);
   const open = total - known - repeat;
+  const projectMode = CARD_CREATION_MODES[project.generationMode]?.label || 'Importiert';
+  const projectVariant = project.generationMode === 'slides'
+    ? SLIDE_DETAIL_OPTIONS[project.modeVariant]?.label
+    : CARD_SIZE_OPTIONS[project.modeVariant]?.label;
+  const projectMethod = projectVariant ? `${projectMode} · ${projectVariant}` : projectMode;
 
   app.innerHTML = `
     <section class="project-hub" aria-labelledby="projectTitle">
@@ -729,7 +905,7 @@ function renderProject(projectId) {
           <div>
             <p class="eyebrow">Lernprojekt</p>
             <h1 id="projectTitle">${escapeHTML(project.title)}</h1>
-            <p>${project.sections.length} ${project.sections.length === 1 ? 'Kategorie' : 'Kategorien'} · ${total} ${total === 1 ? 'Karte' : 'Karten'}</p>
+            <p>${project.sections.length} ${project.sections.length === 1 ? 'Kategorie' : 'Kategorien'} · ${total} ${total === 1 ? 'Karte' : 'Karten'} · ${escapeHTML(projectMethod)}</p>
           </div>
           <div class="project-tools" aria-label="Projekt bearbeiten">
             <button class="icon-action" id="exportProjectButton" type="button" title="Projekt exportieren" aria-label="Projekt exportieren">⇩</button>
@@ -821,10 +997,18 @@ function bindProjectHubEvents(project) {
 
   document.getElementById('exportProjectButton').addEventListener('click', () => {
     const clean = {
+      schemaVersion: 3,
+      generationMode: project.generationMode || 'normal',
+      modeVariant: project.modeVariant || 'learning',
       projectTitle: project.title,
       sections: project.sections.map((section) => ({
         title: section.title,
-        cards: section.cards.map((card) => ({ front: card.front, back: card.back }))
+        cards: section.cards.map((card) => ({
+          id: card.id,
+          front: card.front,
+          back: card.back,
+          source: card.source || { file: null, page: null, slide: null }
+        }))
       }))
     };
     downloadJson(clean, `${safeFilename(project.title)}.json`);
@@ -1083,17 +1267,29 @@ function normalizeProject(input, titleOverride = '') {
   }
   if (!Array.isArray(sections)) throw new Error('Der Schlüssel „sections“ fehlt oder ist keine Liste.');
 
+  const usedCardIds = new Set();
   const normalizedSections = sections.map((section, sectionIndex) => {
     if (!section || typeof section !== 'object') return null;
     const cards = Array.isArray(section.cards) ? section.cards : [];
-    const normalizedCards = cards.map((card) => {
+    const normalizedCards = cards.map((card, cardIndex) => {
       const front = (window.KartenWerkRichText?.decodeLineBreaks(card?.front ?? card?.question ?? card?.title ?? '') || '')
         .replace(/\s*\n\s*/g, ' ')
         .trim();
       const rawBack = card?.back ?? card?.answer ?? card?.content ?? card?.blocks ?? '';
       const back = window.KartenWerkRichText?.normalize(rawBack) || [];
       if (!front || !window.KartenWerkRichText?.hasContent(back)) return null;
-      return { id: makeId('card'), front: front.slice(0, 500), back };
+
+      const proposedId = String(card?.id || '').trim().replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
+      let cardId = proposedId || `card-${String(cardIndex + 1).padStart(3, '0')}`;
+      if (usedCardIds.has(cardId)) cardId = makeId('card');
+      usedCardIds.add(cardId);
+
+      return {
+        id: cardId,
+        front: front.slice(0, 700),
+        back,
+        source: normalizeSource(card?.source)
+      };
     }).filter(Boolean);
     if (!normalizedCards.length) return null;
     return {
@@ -1105,16 +1301,33 @@ function normalizeProject(input, titleOverride = '') {
 
   if (!normalizedSections.length) throw new Error('In den Themen wurden keine vollständigen Karten mit „front“ und „back“ gefunden.');
 
+  const generationMode = ['normal', 'advanced', 'slides'].includes(input.generationMode)
+    ? input.generationMode
+    : state.generationMode;
+  const fallbackVariant = generationMode === 'slides' ? state.slideDetail : state.cardSize;
   const now = new Date().toISOString();
   return {
     id: makeId('project'),
     version: APP_VERSION,
+    schemaVersion: Number(input.schemaVersion) || 1,
+    generationMode,
+    modeVariant: String(input.modeVariant || fallbackVariant).slice(0, 40),
     title: (titleOverride.trim() || String(input.projectTitle || input.title || 'Neues Lernprojekt').trim()).slice(0, 100),
     sections: normalizedSections,
     progress: {},
     createdAt: now,
     updatedAt: now
   };
+}
+
+function normalizeSource(source) {
+  if (!source || typeof source !== 'object') return null;
+  const file = source.file == null ? null : String(source.file).trim().slice(0, 180) || null;
+  const pageNumber = Number(source.page);
+  const slideNumber = Number(source.slide);
+  const page = Number.isFinite(pageNumber) && pageNumber > 0 ? Math.trunc(pageNumber) : null;
+  const slide = Number.isFinite(slideNumber) && slideNumber > 0 ? Math.trunc(slideNumber) : null;
+  return file || page || slide ? { file, page, slide } : null;
 }
 
 function getFilteredCards(project) {
