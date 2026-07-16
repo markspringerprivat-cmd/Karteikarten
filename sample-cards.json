@@ -1,0 +1,31 @@
+{
+  "projectTitle": "Beispielprojekt: Lernpsychologie",
+  "sections": [
+    {
+      "title": "Grundbegriffe",
+      "cards": [
+        {
+          "front": "Was ist Lernen?",
+          "back": "Lernen bezeichnet eine relativ dauerhafte Veränderung von Wissen, Fähigkeiten oder Verhalten, die auf Erfahrung beruht."
+        },
+        {
+          "front": "Was bedeutet Motivation?",
+          "back": "Motivation beschreibt Prozesse, die Verhalten auslösen, ausrichten und aufrechterhalten."
+        }
+      ]
+    },
+    {
+      "title": "Gedächtnis",
+      "cards": [
+        {
+          "front": "Arbeitsgedächtnis",
+          "back": "Das Arbeitsgedächtnis hält Informationen kurzfristig verfügbar und verarbeitet sie aktiv. Seine Kapazität ist begrenzt."
+        },
+        {
+          "front": "Langzeitgedächtnis",
+          "back": "Das Langzeitgedächtnis speichert Informationen über längere Zeiträume. Dazu gehören deklaratives und nichtdeklaratives Wissen."
+        }
+      ]
+    }
+  ]
+}
