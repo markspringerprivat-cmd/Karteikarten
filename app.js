@@ -338,6 +338,50 @@ function renderDashboard() {
   app.focus({ preventScroll: true });
 }
 
+
+function openNewProjectChoiceDialog() {
+  appDialog.className = 'app-dialog compact-dialog new-project-choice-dialog';
+  appDialog.innerHTML = `
+    <div class="app-dialog-card new-project-choice-card">
+      <header class="dialog-header">
+        <div>
+          <p class="eyebrow">Neues Projekt</p>
+          <h2 id="appDialogTitle">Wie möchtest du starten?</h2>
+        </div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+
+      <div class="new-project-choice-grid">
+        <button class="new-project-choice" id="startProjectWizard" type="button">
+          <span class="new-project-choice-icon" aria-hidden="true">＋</span>
+          <span><strong>Projekt erstellen</strong><small>Quelle und Aufbereitung auswählen, Prompt erzeugen und das Ergebnis anschließend importieren.</small></span>
+        </button>
+
+        <label class="new-project-choice upload-choice" for="quickJsonInput">
+          <span class="new-project-choice-icon" aria-hidden="true">⇧</span>
+          <span><strong>JSON-Datei hochladen</strong><small>Eine vorhandene KartenWerk-Datei auswählen und sofort als neues Projekt anlegen.</small></span>
+        </label>
+        <input class="hidden" id="quickJsonInput" type="file" multiple accept=".json,application/json">
+      </div>
+      <p class="choice-hint">Mehrere zusammengehörige Teil-Dateien können gemeinsam ausgewählt werden.</p>
+    </div>`;
+
+  showAppDialog();
+  bindDialogClose();
+
+  document.getElementById('startProjectWizard')?.addEventListener('click', () => {
+    appDialog.close();
+    openCreateProjectDialog(false);
+  });
+
+  document.getElementById('quickJsonInput')?.addEventListener('change', (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    importFiles(files);
+    event.target.value = '';
+  });
+}
+
 function renderProjectCards(projects = state.projects) {
   return projects.map((project, index) => {
     const cardCount = countCards(project);
@@ -357,7 +401,7 @@ function renderProjectCards(projects = state.projects) {
 function bindDashboardEvents() {
   document.getElementById('settingsTile').addEventListener('click', openSettingsDialog);
   document.getElementById('instructionsTile').addEventListener('click', openInstructionsDialog);
-  document.getElementById('newProjectTile').addEventListener('click', () => openCreateProjectDialog(false));
+  document.getElementById('newProjectTile').addEventListener('click', openNewProjectChoiceDialog);
   document.getElementById('mergeProjectsTile')?.addEventListener('click', openMergeProjectsDialog);
 
   document.querySelectorAll('[data-open-project]').forEach((button) => {

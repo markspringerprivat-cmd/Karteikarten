@@ -1593,3 +1593,92 @@ body {
   .variant-option { padding-left: 34px !important; }
   .variant-option::before { left: 10px; }
 }
+
+
+/* KartenWerk 3.3 – direkter JSON-Import und kollisionsfreier Assistent */
+.new-project-choice-card { padding: 24px; }
+.new-project-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.new-project-choice {
+  min-width: 0;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 22px 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .18s ease, background .18s ease;
+}
+.new-project-choice:hover,
+.new-project-choice:focus-visible {
+  border-color: var(--primary);
+  background: var(--surface-3);
+  transform: translateY(-1px);
+  outline: none;
+}
+.new-project-choice-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+}
+.new-project-choice span:last-child { display: grid; gap: 7px; }
+.new-project-choice strong { font-size: 1.05rem; }
+.new-project-choice small { color: var(--muted); line-height: 1.4; }
+.choice-hint { margin: 14px 0 0; color: var(--muted); text-align: center; font-size: .9rem; }
+
+/* Der Seiteninhalt erhält seinen eigenen Scrollbereich. Die Fußleiste bleibt
+   eine getrennte Grid-Zeile und kann keine Auswahl mehr überdecken. */
+.wizard-card {
+  min-height: 0;
+  grid-template-rows: auto auto 5px minmax(0, 1fr) auto !important;
+}
+.wizard-page {
+  min-height: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  place-items: start center !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding-bottom: 28px !important;
+}
+.wizard-centered {
+  max-height: none !important;
+  justify-content: flex-start !important;
+  padding-bottom: 4px;
+}
+.wizard-footer {
+  position: relative;
+  z-index: 3;
+  flex: 0 0 auto;
+  box-shadow: 0 -8px 18px color-mix(in srgb, var(--bg) 24%, transparent);
+}
+
+@media (max-width: 600px) {
+  .new-project-choice-grid { grid-template-columns: 1fr; }
+  .new-project-choice { min-height: 132px; padding: 17px 15px; }
+  .new-project-choice-card { padding: 18px; }
+  .wizard-page {
+    padding: 14px 16px 26px !important;
+    align-content: start;
+  }
+  .wizard-footer {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom)) !important;
+  }
+}
