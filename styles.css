@@ -1371,3 +1371,121 @@ main { padding-top: 34px; }
   .selected-mode-card strong { text-align: left; }
   .chatgpt-button { min-height: 54px; }
 }
+
+/* KartenWerk 3.1 – zentrierter, statischer Projektassistent */
+.home-screen,
+.home-header,
+.app-grid { border: 0 !important; outline: 0 !important; box-shadow: none !important; background-image: none !important; }
+
+.app-project .project-tile {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.project-tile .tile-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  max-width: 100%;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.wizard-dialog {
+  width: min(680px, calc(100vw - 20px));
+  height: min(760px, calc(100dvh - 20px));
+  max-height: calc(100dvh - 20px);
+  padding: 0;
+  overflow: hidden;
+}
+.wizard-card {
+  height: 100%;
+  max-height: none;
+  padding: 0 !important;
+  display: grid;
+  grid-template-rows: auto 5px minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 22px;
+}
+.wizard-header {
+  padding: 18px 22px 12px;
+  margin: 0;
+  text-align: left;
+}
+.wizard-progress { background: var(--line); overflow: hidden; }
+.wizard-progress span { display: block; height: 100%; background: var(--primary); transition: width .2s ease; }
+.wizard-page {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 18px 24px;
+}
+.wizard-centered {
+  width: min(100%, 500px);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+}
+.wizard-centered h3 { margin: 0; }
+.wizard-intro { margin: 0 0 4px; max-width: 46ch; color: var(--muted); }
+.compact-field {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 5px;
+  text-align: center;
+  font-weight: 700;
+}
+.compact-field small { font-weight: 500; color: var(--muted); }
+.centered-input { width: 100%; text-align: center; margin: 0 auto; }
+.compact-field select.centered-input { text-align-last: center; }
+.text-help-button { border: 0; background: transparent; color: var(--primary); font-weight: 700; cursor: pointer; }
+.text-help-button:disabled { opacity: .4; cursor: default; }
+#contextOptions { width: 100%; display: grid; place-items: center; gap: 8px; }
+#contextOptions .variant-block { width: min(100%, 440px); margin: 0; }
+#contextOptions .variant-heading { justify-content: center; text-align: center; }
+#contextOptions .variant-choice { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#contextOptions .variant-option { min-height: 62px; padding: 9px; text-align: center; }
+.selection-summary { width: min(100%, 440px); padding: 10px 14px; border-radius: 12px; background: var(--surface-2); display: grid; gap: 2px; }
+.source-textarea { min-height: 92px !important; max-height: 120px; resize: none; }
+.prompt-step-page .prompt-details { width: min(100%, 440px); max-height: 82px; overflow: hidden; }
+.prompt-step-page .prompt-preview { max-height: 120px; }
+.import-wizard-page .import-tabs,
+.import-wizard-page #fileImport,
+.import-wizard-page #pasteImport { width: min(100%, 440px); }
+.compact-tabs { margin: 0 auto; }
+.import-wizard-page .mobile-dropzone { min-height: 118px; margin: 0; }
+.import-wizard-page .import-textarea { min-height: 130px; max-height: 170px; resize: none; }
+.file-status { margin-top: 8px; color: var(--muted); text-align: center; font-size: .9rem; }
+.wizard-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px 20px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.wizard-footer .button { width: 100%; min-height: 48px; }
+
+@media (max-width: 600px) {
+  .wizard-dialog { width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+  .wizard-card { border-radius: 0; }
+  .wizard-header { padding: max(14px, env(safe-area-inset-top)) 16px 10px; }
+  .wizard-page { padding: 12px 16px; }
+  .wizard-centered { gap: 8px; justify-content: center; }
+  .wizard-intro { font-size: .9rem; line-height: 1.35; }
+  .compact-field { gap: 4px; font-size: .92rem; }
+  .input, .textarea { font-size: 16px; }
+  #contextOptions .variant-option small { display: none; }
+  .prompt-step-page .prompt-details { display: none; }
+  .source-textarea { min-height: 80px !important; }
+  .import-wizard-page .mobile-dropzone { min-height: 105px; }
+}

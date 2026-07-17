@@ -2,52 +2,66 @@
 
 const STORAGE_KEY = 'kartenwerk.projects.v1';
 const THEME_KEY = 'kartenwerk.theme.v1';
+const WIZARD_KEY = 'kartenwerk.createWizard.v2';
 const APP_VERSION = 3;
 const CHATGPT_URL = 'https://chatgpt.com/';
 
-const CARD_CREATION_MODES = {
-  normal: {
-    label: 'Normal',
-    short: 'Wortlaut und Fachbegriffe bewahren',
-    infoTitle: 'Normaler Modus',
-    infoText: 'Dieser Modus bleibt so nah wie möglich an der Quelle. Fachbegriffe, Definitionen, Reihenfolge und charakteristische Formulierungen werden übernommen. Nur die kleinste notwendige grammatische Anpassung ist erlaubt.',
-    prompt: `NORMALER MODUS – VERBINDLICH:
-- Verwende zuerst den exakten Wortlaut der Quelle.
-- Übernimm Fachbegriffe, Definitionen, Kernaussagen, Aufzählungen und charakteristische Formulierungen möglichst wörtlich.
-- Ersetze keinen Fachbegriff durch ein Synonym, wenn der Quellenbegriff übernommen werden kann.
-- Ändere eine Formulierung nur, wenn sie ohne den ursprünglichen Satzkontext unverständlich wäre. Nimm dann ausschließlich die kleinste notwendige grammatische Anpassung vor.
-- Vereinfache, erkläre oder interpretiere nicht eigenständig.
-- Ergänze keine Beispiele, Bewertungen, Ursachen, Folgen oder Informationen, die nicht ausdrücklich aus der Quelle hervorgehen.
-- Unvollständige Stichpunkte dürfen sprachlich geordnet, aber nicht inhaltlich ergänzt werden.`
-  },
-  advanced: {
-    label: 'Advanced',
-    short: 'Verständlich erklären, ohne Neues zu erfinden',
-    infoTitle: 'Advanced-Modus',
-    infoText: 'Dieser Modus bereitet den Quelleninhalt verständlicher auf. Schwierige Sätze dürfen vereinfacht und Fachbegriffe im vorhandenen Zusammenhang erklärt werden. Externe Informationen oder erfundene Beispiele bleiben ausgeschlossen.',
-    prompt: `ADVANCED-MODUS – VERBINDLICH:
-- Bereite die Inhalte klar, leicht verständlich und lernfreundlich auf.
-- Erhalte alle zentralen Fachbegriffe und den fachlichen Sinn der Quelle.
-- Löse unnötig komplizierte Satzstrukturen auf und erkläre schwierige Begriffe kurz in dem Zusammenhang, der aus der Quelle erkennbar ist.
-- Erkläre ausschließlich durch sprachliche Vereinfachung und durch Zusammenhänge, die in der Quelle ausdrücklich erkennbar sind.
-- Ergänze keine externen Informationen, keine recherchierten Inhalte, keine fremden Beispiele und keine nur plausibel klingenden Folgerungen.
-- Beispiele, Abgrenzungen und Begründungen dürfen nur verwendet werden, wenn sie in der Quelle enthalten sind.
-- Kennzeichne Lücken oder Unklarheiten nicht durch erfundene Präzisierungen.`
+const DOCUMENT_TYPES = {
+  notes: {
+    label: 'Lernzettel / Notizen',
+    short: 'Bereits verdichtete Lerninhalte',
+    prompt: `DOKUMENTTYP – LERNZETTEL ODER NOTIZEN:\n- Behandle Überschriften als mögliche Kategorien oder Kartentitel.\n- Erhalte vorhandene Stichpunkte, Einrückungen, Definitionen und Hervorhebungen.\n- Fasse bereits knappe Inhalte nicht unnötig weiter zusammen.`
   },
   slides: {
-    label: 'Folienmodus',
-    short: 'Eine Folie bleibt genau eine Karte',
-    infoTitle: 'Folienmodus',
-    infoText: 'Dieser Modus ist für PowerPoint-Dateien und folienartige PDFs gedacht. Jede Folie beziehungsweise Seite bleibt genau eine Karte. Lange Inhalte werden in KartenWerk innerhalb der Karte gescrollt.',
-    prompt: `FOLIENMODUS – VERBINDLICH:
-- Dieser Modus ist für PowerPoint-Präsentationen und folienartige PDF-Dateien bestimmt.
-- Erstelle für jede einzelne Folie beziehungsweise PDF-Seite genau eine Karte und bewahre die ursprüngliche Reihenfolge.
-- Lege niemals mehrere Folien zusammen und teile niemals eine Folie aufgrund ihrer Länge auf mehrere Karten auf.
-- Die Vorderseite enthält den exakten Folientitel. Fehlt ein Titel, verwende „Folie X“ beziehungsweise „Seite X“ mit der tatsächlichen Nummer.
-- Bewahre Überschriften, Unterüberschriften, Absätze, Hauptpunkte, Unterpunkte, Nummerierungen und Tabellen in ihrer erkennbaren Reihenfolge und Hierarchie.
-- Bei Diagrammen und Abbildungen übernimm nur eindeutig erkennbare Beschriftungen, Werte und ausdrücklich dargestellte Aussagen. Erfinde keine Interpretation.
-- Bilde Oberthemen aus vorhandenen Präsentationsabschnitten oder klar erkennbaren thematischen Blöcken, ohne zusätzliche Karten zu erzeugen.
-- Die Anzahl der Karten muss der Anzahl der berücksichtigten Folien beziehungsweise Seiten entsprechen.`
+    label: 'PowerPoint / Folien-PDF',
+    short: 'Folienstruktur und Reihenfolge',
+    prompt: `DOKUMENTTYP – PRÄSENTATION:\n- Beachte Foliengrenzen, Folientitel, Unterpunkte, Einrückungen, Tabellen und sichtbare Reihenfolge.\n- Verwende ausschließlich die gewählte Folien- oder Seitenspanne, sofern angegeben.\n- Interpretiere Abbildungen nur anhand eindeutig lesbarer Beschriftungen und Werte.`
+  },
+  book: {
+    label: 'Buch / Kapitel',
+    short: 'Kapitelstruktur und Fließtext',
+    prompt: `DOKUMENTTYP – BUCH ODER BUCHKAPITEL:\n- Orientiere dich an Kapitel- und Zwischenüberschriften.\n- Verwende nur das angegebene Kapitel beziehungsweise den angegebenen Seitenbereich, sofern eine Eingrenzung vorliegt.\n- Löse Konzepte aus dem Fließtext, ohne Aussagen aus ihrem fachlichen Zusammenhang zu reißen.`
+  },
+  textPdf: {
+    label: 'Text-PDF / Fachtext',
+    short: 'Abschnitte, Begriffe und Argumente',
+    prompt: `DOKUMENTTYP – TEXT-PDF ODER FACHTEXT:\n- Nutze Überschriften und Absätze zur Gliederung.\n- Identifiziere Definitionen, Schlüsselbegriffe, Modelle, Argumente, Zusammenhänge und Ergebnisse.\n- Verwende nur den angegebenen Seitenbereich, sofern eine Eingrenzung vorliegt.`
+  },
+  other: {
+    label: 'Anderes Dokument',
+    short: 'Allgemeine strukturierte Auswertung',
+    prompt: `DOKUMENTTYP – SONSTIGE QUELLE:\n- Erkenne die sichtbare Gliederung der Quelle und übertrage sie nachvollziehbar.\n- Bewahre die Reihenfolge, soweit sie für das Verständnis relevant ist.`
+  }
+};
+
+const CARD_CREATION_MODES = {
+  normal: {
+    label: 'Normal: Konzepte',
+    short: 'Quellennah nach Begriffen und Überschriften',
+    infoTitle: 'Normaler Modus',
+    infoText: 'Erkennt hervorgehobene Überschriften, Schlüsselbegriffe und Konzepte. Die Erklärung darunter wird möglichst wortlautnah übernommen. Fachbegriffe, Wortwahl und Stil der Quelle bleiben erhalten.',
+    prompt: `MODUS – NORMAL, KONZEPTE:\n- Suche nach deutlich erkennbaren Überschriften, hervorgehobenen Begriffen, Definitionen, Schlüsselbegriffen und eigenständigen Konzepten.\n- Verwende eine Überschrift oder einen Schlüsselbegriff als Vorderseite und übernimm die zugehörige Erklärung darunter als Rückseite.\n- Bleibe möglichst genau bei Fachbegriffen, Wortwahl, Stil und Aussagefolge der Quelle.\n- Formuliere nur so weit um, wie es für eine eigenständig verständliche Karte grammatisch notwendig ist.\n- Nutze ausschließlich die bereitgestellte Quelle. Ergänze, recherchiere oder erfinde nichts.`
+  },
+  chapter: {
+    label: 'Kapitel zusammenfassen',
+    short: 'Wichtigste Aussagen eines Kapitels',
+    infoTitle: 'Kapitel zusammenfassen',
+    infoText: 'Erkennt Kapitel und fasst deren wichtigste Inhalte in lernbaren Stichpunktsätzen zusammen. Besonders geeignet für Bücher und längere Fachtexte.',
+    prompt: `MODUS – KAPITEL ZUSAMMENFASSEN:\n- Erkenne Kapitel und Unterkapitel anhand der Quelle.\n- Erstelle pro ausgewähltem Kapitel eine oder mehrere logisch gegliederte Karten mit den wichtigsten Aussagen.\n- Schreibe die Rückseiten als vollständige, knappe Stichpunktsätze.\n- Bewahre zentrale Fachbegriffe, Definitionen, Modelle, Argumente und Ergebnisse.\n- Lasse Beispiele und Details nur weg, wenn sie für das Verständnis der Kernaussagen nicht erforderlich sind.\n- Nutze ausschließlich die Quelle; keine Ergänzungen aus Vorwissen.`
+  },
+  advanced: {
+    label: 'Advanced: erklärt',
+    short: 'Quellennah plus verständliche Definitionen',
+    infoTitle: 'Advanced-Modus',
+    infoText: 'Bleibt nah an Wortwahl und Stil der Quelle, ergänzt aber kurze verständliche Erklärungen zu Fachbegriffen und schwierigen Zusammenhängen – ohne fremde Informationen.',
+    prompt: `MODUS – ADVANCED:\n- Übernimm Kernaussagen, Fachbegriffe, Wortwahl und Stil so nah wie sinnvoll an der Quelle.\n- Ergänze kurze verständliche Erklärungen zu schwierigen Fachbegriffen und Zusammenhängen.\n- Solche Erklärungen dürfen nur aus Informationen abgeleitet werden, die in der Quelle selbst enthalten oder eindeutig erkennbar sind.\n- Nutze keine externen Quellen, keine erfundenen Beispiele und keine zusätzlichen Theorien.\n- Trenne Quelleninhalt und erklärende Verdeutlichung nicht künstlich, sondern formuliere eine gut lernbare, fachlich genaue Antwort.`
+  },
+  slides: {
+    label: 'PowerPoint: Folie = Karte',
+    short: 'Eine Folie bleibt eine Karte',
+    infoTitle: 'PowerPoint-Modus',
+    infoText: 'Jede berücksichtigte Folie oder PDF-Seite wird genau eine Karte. Lange Inhalte bleiben vollständig und werden in KartenWerk innerhalb der Karte gescrollt.',
+    prompt: `MODUS – POWERPOINT:\n- Erstelle aus jeder berücksichtigten Folie beziehungsweise Seite genau eine Karte.\n- Vorderseite: exakter Folientitel; fehlt er, verwende „Folie X“ oder „Seite X“.\n- Rückseite: sämtliche relevanten Inhalte derselben Folie in sichtbarer Reihenfolge und Hierarchie.\n- Lege keine Folien zusammen und teile keine Folie wegen ihrer Länge.\n- Erhalte Hauptpunkte, Unterpunkte, Nummerierungen, Tabellen, Zahlen und Fachbegriffe.\n- Lange Karten sind ausdrücklich zulässig und werden in KartenWerk gescrollt.`
   }
 };
 
@@ -94,35 +108,37 @@ const SLIDE_DETAIL_OPTIONS = {
   }
 };
 
-const JSON_PROMPT = `AUFGABE
-Erstelle aus den angehängten Dateien und/oder dem Text unter AUSGANGSTEXT einen vollständigen KartenWerk-Lernkartensatz. Nutze ausschließlich sicher erkennbare Quelleninformationen; nichts ergänzen oder recherchieren.
+const JSON_PROMPT = `Erstelle eine herunterladbare JSON-Datei mit folgendem Inhalt.
 
-MODUS
+QUELLE
+Verarbeite angehängte PDF-, Word-, PowerPoint-, Text- oder Bilddateien und/oder den Text unter AUSGANGSTEXT gemeinsam. Nutze ausschließlich sicher lesbare Informationen aus diesen Quellen. Erfinde, ergänze oder recherchiere nichts.
+
+{{DOCUMENT_RULES}}
+{{SCOPE_RULES}}
 {{MODE_RULES}}
 {{VARIANT_RULES}}
 
-KARTEN
-- Projekt in sinnvolle Oberthemen gliedern.
-- front: eindeutige Frage, Begriff oder im Folienmodus der Folientitel.
-- back: Array aus strukturierten Blöcken.
-- Lange Karten sind erlaubt; KartenWerk scrollt den Karteninhalt.
-- Sichtbare Reihenfolge, Hierarchie, Fachbegriffe, Zahlen, Listen und Tabellen bewahren.
+KARTENWERK-FORMAT
+- Gliedere das Projekt in sinnvolle sections.
+- Jede Karte hat front und back. back ist ein Array strukturierter Blöcke.
+- Erhalte sichtbare Überschriften, Absätze, Listen, Unterpunkte, Nummerierungen, Tabellen, Fachbegriffe, Zahlen und Reihenfolge.
+- Lange Karten sind erlaubt; kürze nicht wegen der Bildschirmgröße.
 
-BACK-BLÖCKE
-{ "type":"heading", "text":"Zwischenüberschrift" }
-{ "type":"paragraph", "text":"Absatz" }
-{ "type":"list", "style":"unordered", "items":["Punkt 1","Punkt 2"] }
-{ "type":"list", "style":"ordered", "items":["Schritt 1","Schritt 2"] }
-{ "type":"table", "headers":["A","B"], "rows":[["a1","b1"],["a2","b2"]] }
+ZULÄSSIGE BACK-BLÖCKE
+{"type":"heading","text":"Zwischenüberschrift"}
+{"type":"paragraph","text":"Absatz"}
+{"type":"list","style":"unordered","items":["Punkt 1","Punkt 2"]}
+{"type":"list","style":"ordered","items":["Schritt 1","Schritt 2"]}
+{"type":"table","headers":["A","B"],"rows":[["a1","b1"],["a2","b2"]]}
 
-REGELN
-- Aufzählungszeichen nie als normalen Absatz speichern; jeder Punkt ist ein eigenes items-Element.
+TECHNISCHE REGELN
+- Jeder Listenpunkt ist ein eigenes items-Element; keine Aufzählungszeichen im paragraph-Text.
 - Keine sichtbaren \\n, \\r, <br>, Markdown- oder HTML-Zeichen in Textfeldern.
-- Tabellen nur übernehmen, wenn die Quelle eine Tabelle oder klare Gegenüberstellung enthält; alle Zeilen gleich breit.
-- Jede Karte erhält eine eindeutige ID card-001, card-002 usw.
+- Tabellen nur bei einer tatsächlichen Tabelle oder klaren Gegenüberstellung; alle Zeilen haben gleich viele Zellen.
+- Eindeutige Karten-IDs: card-001, card-002 usw.
 - source nur mit sicher erkennbaren Angaben füllen, sonst null.
 
-JSON-SCHEMA
+SCHEMA
 {
   "schemaVersion":3,
   "projectId":"stabiler-kurztitel",
@@ -142,24 +158,25 @@ JSON-SCHEMA
   }]
 }
 
-GROSSE ODER NICHT VOLLSTÄNDIG LESBARE QUELLEN
-- Prüfe vor der Dateierstellung, ob die gesamte Quelle sicher verarbeitet werden konnte und ob das Projekt in eine Datei passt.
-- Falls die Quelle nur teilweise verfügbar ist oder mehrere Dateien nötig wären, erstelle noch keine verkürzte Datei. Frage stattdessen ausschließlich:
-  „Die Quelle kann nicht zuverlässig als eine vollständige JSON-Datei ausgegeben werden. Soll ich sie in mehrere KartenWerk-JSON-Dateien aufteilen oder die Erstellung abbrechen? Antworte mit: AUFTEILEN oder ABBRECHEN.“
-- Nach der Antwort AUFTEILEN: Verarbeite die Quelle vollständig und erzeuge mehrere gültige Dateien mit höchstens 80 Karten je Datei.
-- Alle Teile verwenden dieselbe projectId und projectTitle sowie part und parts. Beispiel: "projectId":"forschungsdesigns", "part":1, "parts":3.
-- Benenne die Dateien kartenwerk-kurztitel-teil-01.json, -teil-02.json usw. Jeder Teil enthält nur vollständige Karten.
-- Nach ABBRECHEN: Erstelle keine Datei.
+UMFANG UND TEILDATEIEN
+- Versuche zuerst, eine vollständige Datei zu erstellen.
+- Falls die Quelle nicht vollständig verfügbar ist: Erstelle keine unvollständige Datei. Frage: „Die Quelle konnte nicht vollständig gelesen werden. Möchtest du den Vorgang abbrechen oder die Quelle erneut vollständig bereitstellen? Antworte mit ABBRECHEN oder ERNEUT.“
+- Falls nur die Ausgabe zu umfangreich für eine Datei ist: Frage: „Das vollständige Projekt benötigt mehrere JSON-Dateien. Soll ich Teil 1, Teil 2 usw. erstellen oder abbrechen? Antworte mit AUFTEILEN oder ABBRECHEN.“
+- Nach AUFTEILEN: Erzeuge mehrere vollständige Dateien mit höchstens 80 Karten. Gleiche projectId und projectTitle, korrekte part/parts-Werte, Dateinamen kartenwerk-kurztitel-teil-01.json usw.
 
 AUSGABE
-- Erstelle echte UTF-8-.json-Dateien als herunterladbare Anhänge. Schreibe den JSON-Inhalt nicht in den Chat oder in Codeblöcke.
-- Prüfe vor dem Speichern: gültiges JSON, keine leeren/doppelten Karten, korrekte Blöcke, ausschließlich Quelleninhalt.
-- Falls Dateierstellung technisch wirklich unmöglich ist, erkläre das erst nach einem tatsächlichen Erstellungsversuch knapp.
+- Stelle die fertige UTF-8-.json-Datei beziehungsweise die Teil-Dateien als echte herunterladbare Anhänge bereit.
+- Schreibe den JSON-Inhalt nicht in den Chat und nicht in einen Codeblock.
+- Prüfe vorher: gültiges JSON, keine leeren oder doppelten Karten, korrekte Blöcke und ausschließlich Quelleninhalt.
 
 AUSGANGSTEXT
 [TEXT HIER EINFÜGEN ODER LEER LASSEN, WENN DIE QUELLE ANGEHÄNGT WIRD.]`;
 const DELIMITER_PROMPT = `AUFGABE
 Erstelle aus angehängten Dateien und/oder AUSGANGSTEXT einen vollständigen KartenWerk-Lernkartensatz. Nutze ausschließlich Quelleninformationen.
+
+QUELLENART
+{{DOCUMENT_RULES}}
+{{SCOPE_RULES}}
 
 MODUS
 {{MODE_RULES}}
@@ -200,6 +217,10 @@ const state = {
   importTab: 'file',
   promptMode: 'json',
   generationMode: 'normal',
+  documentType: 'notes',
+  scopeChapter: '',
+  scopePages: '',
+  wizardStep: 1,
   cardSize: 'learning',
   slideDetail: 'full',
   study: {
@@ -327,7 +348,6 @@ function renderProjectCards(projects = state.projects) {
         <button class="app-tile project-tile" data-open-project="${project.id}" type="button" aria-label="${escapeHTML(project.title)} öffnen">
           <span class="tile-icon project-tile-icon" aria-hidden="true">${escapeHTML(initials(project.title))}</span>
           <span class="tile-title">${escapeHTML(project.title)}</span>
-          <span class="tile-meta">${sectionCount} ${sectionCount === 1 ? 'Thema' : 'Themen'} · ${cardCount} ${cardCount === 1 ? 'Karte' : 'Karten'}${project.parts > 1 ? ` · Teil ${project.part || '?'} von ${project.parts}` : ''}</span>
         </button>
         <button class="project-tile-menu" data-delete-project="${project.id}" type="button" aria-label="${escapeHTML(project.title)} löschen" title="Projekt löschen">×</button>
       </article>`;
@@ -337,7 +357,7 @@ function renderProjectCards(projects = state.projects) {
 function bindDashboardEvents() {
   document.getElementById('settingsTile').addEventListener('click', openSettingsDialog);
   document.getElementById('instructionsTile').addEventListener('click', openInstructionsDialog);
-  document.getElementById('newProjectTile').addEventListener('click', openCreateProjectDialog);
+  document.getElementById('newProjectTile').addEventListener('click', () => openCreateProjectDialog(false));
   document.getElementById('mergeProjectsTile')?.addEventListener('click', openMergeProjectsDialog);
 
   document.querySelectorAll('[data-open-project]').forEach((button) => {
@@ -522,7 +542,7 @@ function openInstructionsDialog() {
 
   showAppDialog();
   bindDialogClose();
-  document.getElementById('instructionCreateProject').addEventListener('click', () => openCreateProjectDialog());
+  document.getElementById('instructionCreateProject').addEventListener('click', () => openCreateProjectDialog(true));
 }
 
 function getSelectedVariant() {
@@ -532,11 +552,24 @@ function getSelectedVariant() {
   return { key: state.cardSize, ...(CARD_SIZE_OPTIONS[state.cardSize] || CARD_SIZE_OPTIONS.learning) };
 }
 
+function getScopeRules() {
+  const chapter = String(state.scopeChapter || '').trim();
+  const pages = String(state.scopePages || '').trim();
+  const lines = ['EINGRENZUNG:'];
+  if (chapter) lines.push(`- Verwende ausschließlich dieses Kapitel beziehungsweise diesen Abschnitt: ${chapter}`);
+  if (pages) lines.push(`- Verwende ausschließlich diesen Folien-/Seitenbereich: ${pages}`);
+  if (!chapter && !pages) lines.push('- Verarbeite die gesamte bereitgestellte Quelle.');
+  return lines.join('\n');
+}
+
 function getActivePrompt() {
   const template = state.promptMode === 'json' ? JSON_PROMPT : DELIMITER_PROMPT;
   const mode = CARD_CREATION_MODES[state.generationMode] || CARD_CREATION_MODES.normal;
+  const doc = DOCUMENT_TYPES[state.documentType] || DOCUMENT_TYPES.notes;
   const variant = getSelectedVariant();
   return template
+    .replaceAll('{{DOCUMENT_RULES}}', doc.prompt)
+    .replaceAll('{{SCOPE_RULES}}', getScopeRules())
     .replaceAll('{{MODE_RULES}}', mode.prompt)
     .replaceAll('{{VARIANT_RULES}}', variant.prompt)
     .replaceAll('{{MODE_KEY}}', state.generationMode)
@@ -544,10 +577,10 @@ function getActivePrompt() {
 }
 
 function getPromptWithOptionalSource() {
-  const source = document.getElementById('sourceText')?.value.trim() || '';
+  const source = document.getElementById('sourceText')?.value.trim() || loadWizardDraft().sourceText || '';
   const prompt = getActivePrompt();
   if (!source) return prompt;
-  return prompt.replace(/\[TEXT ODER LERNZETTEL HIER EINFÜGEN[^\]]*\]/, () => source);
+  return prompt.replace(/\[TEXT HIER EINFÜGEN[^\]]*\]/, () => source);
 }
 
 function renderPromptModeOptions() {
@@ -598,7 +631,8 @@ function bindModeVariantButtons() {
     button.addEventListener('click', () => {
       if (state.generationMode === 'slides') state.slideDetail = button.dataset.modeVariant;
       else state.cardSize = button.dataset.modeVariant;
-      refreshPromptConfiguration();
+      saveWizardDraft();
+      document.querySelectorAll('[data-mode-variant]').forEach((item) => item.classList.toggle('active', item === button));
     });
   });
 }
@@ -630,220 +664,213 @@ function openModeInfoDialog(modeKey) {
   if (!modeInfoDialog.open) modeInfoDialog.showModal();
 }
 
-function openCreateProjectDialog() {
-  const prompt = getActivePrompt();
-  const selectedMode = CARD_CREATION_MODES[state.generationMode];
-  const selectedVariant = getSelectedVariant();
-  appDialog.className = 'app-dialog create-dialog';
-  appDialog.innerHTML = `
-    <div class="app-dialog-card create-dialog-card">
-      <header class="dialog-header sticky-dialog-header">
-        <div>
-          <p class="eyebrow">Projektassistent</p>
-          <h2 id="appDialogTitle">Neues Lernprojekt</h2>
-        </div>
-        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
-      </header>
-
-      <div class="wizard-overview" aria-label="Ablauf">
-        <span><b>1</b> Prompt wählen</span>
-        <span><b>2</b> In ChatGPT erstellen</span>
-        <span><b>3</b> Ergebnis importieren</span>
-      </div>
-
-      <div class="create-flow simplified-flow">
-        <section class="flow-step">
-          <div class="flow-step-number">1</div>
-          <div class="flow-step-content">
-            <h3>Wie sollen die Karten erstellt werden?</h3>
-            <p>Wähle zuerst die Aufbereitung. Das Fragezeichen erklärt den Unterschied.</p>
-
-            <fieldset class="prompt-mode-fieldset">
-              <legend>Aufbereitungsmodus</legend>
-              <div class="prompt-mode-list" role="radiogroup" aria-label="Aufbereitungsmodus">
-                ${renderPromptModeOptions()}
-              </div>
-            </fieldset>
-
-            <div id="modeVariantHost">${renderModeVariantOptions()}</div>
-
-            <div class="output-format-block">
-              <span class="mini-label">Ausgabeformat</span>
-              <p>JSON wird empfohlen: Listen, Tabellen und Überschriften bleiben eindeutig strukturiert.</p>
-              <div class="format-choice" role="group" aria-label="Ausgabeformat">
-                <button class="choice-button ${state.promptMode === 'json' ? 'active' : ''}" data-create-prompt-mode="json" type="button">JSON-Datei <small>empfohlen</small></button>
-                <button class="choice-button ${state.promptMode === 'delimiter' ? 'active' : ''}" data-create-prompt-mode="delimiter" type="button">§§§-Text</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="flow-step prompt-action-step">
-          <div class="flow-step-number">2</div>
-          <div class="flow-step-content">
-            <h3>Prompt an ChatGPT übergeben</h3>
-            <p>Hänge die Quelle anschließend in ChatGPT an. Einen direkt eingefügten Lerntext kannst du schon hier ergänzen.</p>
-
-            <div class="selected-mode-card">
-              <span>Gewählt</span>
-              <strong id="selectedModeSummary">${escapeHTML(selectedMode.label)} · ${escapeHTML(selectedVariant.label)}</strong>
-            </div>
-
-            <div class="field">
-              <label class="label" for="sourceText">Lerntext direkt ergänzen <span class="optional">optional</span></label>
-              <textarea class="textarea source-textarea" id="sourceText" placeholder="Leer lassen, wenn du PDF, PowerPoint oder eine andere Datei erst in ChatGPT anhängst."></textarea>
-              <p class="field-help">Ist hier Text eingetragen, wird er beim Kopieren automatisch in den Prompt eingesetzt.</p>
-            </div>
-
-            <div class="prompt-primary-actions">
-              <button class="button full-width chatgpt-button" id="copyAndOpenChatGPTButton" type="button">
-                <span aria-hidden="true">↗</span> Prompt kopieren &amp; ChatGPT öffnen
-              </button>
-              <button class="button ghost full-width" id="copyPromptButton" type="button">Nur Prompt kopieren</button>
-            </div>
-            <p class="opening-note">Ist die ChatGPT-App für den Link eingerichtet, kann sie sich öffnen. Andernfalls öffnet sich ChatGPT im Browser.</p>
-
-            <details class="prompt-details">
-              <summary>Erzeugten Prompt ansehen</summary>
-              <pre class="prompt-preview" id="promptPreview">${escapeHTML(prompt)}</pre>
-            </details>
-
-            <div class="notice info" id="formatNotice">${state.promptMode === 'json'
-              ? 'ChatGPT erstellt eine oder bei großen Projekten mehrere .json-Dateien. Du kannst alle Teil-Dateien gemeinsam hochladen.'
-              : 'ChatGPT gibt formatierten §§§-Text aus. Diesen kopierst du anschließend unten in KartenWerk.'}</div>
-          </div>
-        </section>
-
-        <section class="flow-step import-step">
-          <div class="flow-step-number">3</div>
-          <div class="flow-step-content">
-            <h3>Ergebnis in KartenWerk importieren</h3>
-            <p>Lade eine JSON-Datei oder mehrere Teil-Dateien gemeinsam hoch. KartenWerk fügt sie automatisch zusammen. Alternativ kannst du Text einfügen.</p>
-            <div class="field">
-              <label class="label" for="projectTitleOverride">Eigener Projektname <span class="optional">optional</span></label>
-              <input class="input" id="projectTitleOverride" type="text" maxlength="100" placeholder="Sonst wird der Titel aus der Datei übernommen">
-            </div>
-
-            <div class="import-tabs" role="tablist" aria-label="Importart">
-              <button class="tab-button ${state.importTab === 'file' ? 'active' : ''}" data-import-tab="file" type="button">Datei hochladen</button>
-              <button class="tab-button ${state.importTab === 'paste' ? 'active' : ''}" data-import-tab="paste" type="button">Text einfügen</button>
-            </div>
-
-            <div id="fileImport" class="${state.importTab === 'file' ? '' : 'hidden'}">
-              <label class="dropzone mobile-dropzone" id="dropzone" for="fileInput">
-                <span class="dropzone-icon" aria-hidden="true">＋</span>
-                <div><strong>JSON- oder TXT-Datei(en) auswählen</strong><span>Einzeldatei oder mehrere Teil-Dateien gemeinsam auswählen</span></div>
-              </label>
-              <input class="hidden" id="fileInput" type="file" multiple accept=".json,.txt,application/json,text/plain">
-            </div>
-
-            <div id="pasteImport" class="${state.importTab === 'paste' ? '' : 'hidden'}">
-              <label class="label" for="importText">ChatGPT-Ausgabe</label>
-              <textarea class="textarea import-textarea" id="importText" spellcheck="false" placeholder="§§§-Text oder vorhandenen JSON-Inhalt einfügen …"></textarea>
-              <div class="button-row mobile-stack">
-                <button class="button ghost" id="pasteClipboardButton" type="button">Aus Zwischenablage</button>
-                <button class="button" id="importTextButton" type="button">Projekt erstellen</button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>`;
-
-  showAppDialog();
-  bindDialogClose();
-  bindCreateDialogEvents();
+function loadWizardDraft() {
+  try { return JSON.parse(localStorage.getItem(WIZARD_KEY) || '{}'); } catch { return {}; }
 }
 
-function bindCreateDialogEvents() {
-  document.querySelectorAll('[data-generation-mode]').forEach((button) => {
-    button.addEventListener('click', () => {
-      state.generationMode = button.dataset.generationMode;
-      refreshPromptConfiguration();
-    });
-  });
+function saveWizardDraft(extra = {}) {
+  const draft = {
+    step: state.wizardStep,
+    documentType: state.documentType,
+    generationMode: state.generationMode,
+    cardSize: state.cardSize,
+    slideDetail: state.slideDetail,
+    promptMode: state.promptMode,
+    importTab: state.importTab,
+    scopeChapter: state.scopeChapter,
+    scopePages: state.scopePages,
+    sourceText: document.getElementById('sourceText')?.value ?? loadWizardDraft().sourceText ?? '',
+    projectTitle: document.getElementById('projectTitleOverride')?.value ?? loadWizardDraft().projectTitle ?? '',
+    importText: document.getElementById('importText')?.value ?? loadWizardDraft().importText ?? '',
+    ...extra
+  };
+  localStorage.setItem(WIZARD_KEY, JSON.stringify(draft));
+}
 
+function clearWizardDraft() { localStorage.removeItem(WIZARD_KEY); }
+
+function restoreWizardState() {
+  const d = loadWizardDraft();
+  state.wizardStep = Math.min(3, Math.max(1, Number(d.step) || 1));
+  state.documentType = d.documentType || '';
+  state.generationMode = d.generationMode || '';
+  state.cardSize = d.cardSize || 'learning';
+  state.slideDetail = d.slideDetail || 'full';
+  state.promptMode = d.promptMode || '';
+  state.importTab = d.importTab || 'file';
+  state.scopeChapter = d.scopeChapter || '';
+  state.scopePages = d.scopePages || '';
+}
+
+function wizardStepComplete(step) {
+  if (step === 1) return Boolean(state.documentType && state.generationMode && state.promptMode);
+  return true;
+}
+
+function openCreateProjectDialog(reset = false) {
+  if (reset) clearWizardDraft();
+  restoreWizardState();
+  renderCreateWizard();
+}
+
+function renderCreateWizard() {
+  const draft = loadWizardDraft();
+  const step = state.wizardStep;
+  appDialog.className = 'app-dialog create-dialog wizard-dialog';
+  appDialog.innerHTML = `
+    <div class="app-dialog-card create-dialog-card wizard-card">
+      <header class="dialog-header wizard-header">
+        <div><p class="eyebrow">Neues Projekt</p><h2 id="appDialogTitle">Schritt ${step} von 3</h2></div>
+        <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
+      </header>
+      <div class="wizard-progress" aria-label="Fortschritt"><span style="width:${step/3*100}%"></span></div>
+      <main class="wizard-page">${renderWizardStep(step, draft)}</main>
+      <footer class="wizard-footer">
+        <button class="button ghost" id="wizardBack" type="button" ${step === 1 ? 'disabled' : ''}>← Zurück</button>
+        ${step < 3
+          ? `<button class="button" id="wizardNext" type="button" ${wizardStepComplete(step) ? '' : 'disabled'}>Weiter →</button>`
+          : `<button class="button" id="wizardCreate" type="button">Projekt erstellen</button>`}
+      </footer>
+    </div>`;
+  showAppDialog(); bindDialogClose(); bindWizardEvents();
+}
+
+function renderWizardStep(step, draft) {
+  if (step === 1) return `
+    <section class="wizard-centered">
+      <h3>Quelle und Aufbereitung wählen</h3>
+      <p class="wizard-intro">Diese Auswahl bestimmt, wie ChatGPT deine Quelle liest und die Karten gliedert.</p>
+      <label class="compact-field">Dokumenttyp
+        <select id="documentTypeSelect" class="input centered-input">
+          <option value="">Bitte auswählen …</option>
+          ${Object.entries(DOCUMENT_TYPES).map(([k,v])=>`<option value="${k}" ${state.documentType===k?'selected':''}>${escapeHTML(v.label)}</option>`).join('')}
+        </select>
+      </label>
+      <label class="compact-field">Aufbereitungsmodus
+        <select id="generationModeSelect" class="input centered-input">
+          <option value="">Bitte auswählen …</option>
+          ${Object.entries(CARD_CREATION_MODES).map(([k,v])=>`<option value="${k}" ${state.generationMode===k?'selected':''}>${escapeHTML(v.label)}</option>`).join('')}
+        </select>
+      </label>
+      <button class="text-help-button" id="modeHelpButton" type="button" ${state.generationMode?'':'disabled'}>Was macht dieser Modus?</button>
+      <div id="contextOptions">${renderContextOptions(draft)}</div>
+      <label class="compact-field">Ausgabeformat
+        <select id="promptModeSelect" class="input centered-input">
+          <option value="">Bitte auswählen …</option>
+          <option value="json" ${state.promptMode==='json'?'selected':''}>JSON-Datei (empfohlen)</option>
+          <option value="delimiter" ${state.promptMode==='delimiter'?'selected':''}>§§§-Text</option>
+        </select>
+      </label>
+    </section>`;
+  if (step === 2) return `
+    <section class="wizard-centered prompt-step-page">
+      <h3>Prompt an ChatGPT senden</h3>
+      <p class="wizard-intro">Der Prompt ist fertig auf deine Auswahl abgestimmt. Anhänge fügst du anschließend direkt in ChatGPT hinzu.</p>
+      <div class="selection-summary">
+        <strong>${escapeHTML(DOCUMENT_TYPES[state.documentType]?.label || '')}</strong>
+        <span>${escapeHTML(CARD_CREATION_MODES[state.generationMode]?.label || '')}</span>
+      </div>
+      <label class="compact-field">Text direkt ergänzen <small>optional</small>
+        <textarea class="textarea source-textarea" id="sourceText" placeholder="Leer lassen, wenn du eine Datei in ChatGPT anhängst.">${escapeHTML(draft.sourceText || '')}</textarea>
+      </label>
+      <button class="button full-width chatgpt-button" id="copyAndOpenChatGPTButton" type="button">Prompt kopieren &amp; ChatGPT öffnen ↗</button>
+      <button class="button ghost full-width" id="copyPromptButton" type="button">Nur Prompt kopieren</button>
+      <details class="prompt-details"><summary>Prompt ansehen</summary><pre class="prompt-preview" id="promptPreview">${escapeHTML(getActivePrompt())}</pre></details>
+    </section>`;
+  return `
+    <section class="wizard-centered import-wizard-page">
+      <h3>Ergebnis importieren</h3>
+      <p class="wizard-intro">Wähle die heruntergeladene JSON-Datei. Mehrere Teil-Dateien kannst du gemeinsam auswählen.</p>
+      <label class="compact-field">Projektname <small>optional</small>
+        <input class="input centered-input" id="projectTitleOverride" maxlength="100" value="${escapeHTML(draft.projectTitle || '')}" placeholder="Titel aus Datei übernehmen">
+      </label>
+      <div class="import-tabs compact-tabs">
+        <button class="tab-button ${state.importTab==='file'?'active':''}" data-import-tab="file" type="button">Datei</button>
+        <button class="tab-button ${state.importTab==='paste'?'active':''}" data-import-tab="paste" type="button">Text</button>
+      </div>
+      <div id="fileImport" class="${state.importTab==='file'?'':'hidden'}">
+        <label class="dropzone mobile-dropzone" id="dropzone" for="fileInput"><span class="dropzone-icon">＋</span><div><strong>Datei(en) auswählen</strong><span>JSON oder TXT; Teil-Dateien gemeinsam möglich</span></div></label>
+        <input class="hidden" id="fileInput" type="file" multiple accept=".json,.txt,application/json,text/plain">
+        <div id="selectedFilesStatus" class="file-status">Noch keine Datei ausgewählt</div>
+      </div>
+      <div id="pasteImport" class="${state.importTab==='paste'?'':'hidden'}">
+        <textarea class="textarea import-textarea" id="importText" placeholder="JSON- oder §§§-Text einfügen …">${escapeHTML(draft.importText || '')}</textarea>
+        <button class="button ghost full-width" id="pasteClipboardButton" type="button">Aus Zwischenablage einfügen</button>
+      </div>
+    </section>`;
+}
+
+function renderContextOptions(draft) {
+  const doc = state.documentType;
+  const mode = state.generationMode;
+  let html = '';
+  if (doc === 'book') html += `<label class="compact-field">Kapitel / Abschnitt <small>optional</small><input id="scopeChapter" class="input centered-input" value="${escapeHTML(state.scopeChapter)}" placeholder="z. B. Kapitel 4"></label>`;
+  if (doc === 'book' || doc === 'slides' || doc === 'textPdf') html += `<label class="compact-field">Seiten / Folien <small>optional</small><input id="scopePages" class="input centered-input" value="${escapeHTML(state.scopePages)}" placeholder="z. B. 12–28"></label>`;
+  if (mode) html += renderModeVariantOptions();
+  return html;
+}
+
+function bindWizardEvents() {
+  const next = document.getElementById('wizardNext');
+  const back = document.getElementById('wizardBack');
+  back?.addEventListener('click', () => { saveWizardDraft(); state.wizardStep--; saveWizardDraft({step:state.wizardStep}); renderCreateWizard(); });
+  next?.addEventListener('click', () => { saveWizardDraft(); if (!wizardStepComplete(state.wizardStep)) return; state.wizardStep++; saveWizardDraft({step:state.wizardStep}); renderCreateWizard(); });
+
+  const docSel = document.getElementById('documentTypeSelect');
+  const modeSel = document.getElementById('generationModeSelect');
+  const formatSel = document.getElementById('promptModeSelect');
+  const updateStepOne = () => {
+    state.documentType = docSel?.value || state.documentType;
+    state.generationMode = modeSel?.value || state.generationMode;
+    state.promptMode = formatSel?.value || state.promptMode;
+    state.importTab = state.promptMode === 'delimiter' ? 'paste' : 'file';
+    saveWizardDraft(); renderCreateWizard();
+  };
+  docSel?.addEventListener('change', updateStepOne);
+  modeSel?.addEventListener('change', updateStepOne);
+  formatSel?.addEventListener('change', updateStepOne);
+  document.getElementById('modeHelpButton')?.addEventListener('click',()=>openModeInfoDialog(state.generationMode));
+  document.getElementById('scopeChapter')?.addEventListener('input',e=>{state.scopeChapter=e.target.value;saveWizardDraft();});
+  document.getElementById('scopePages')?.addEventListener('input',e=>{state.scopePages=e.target.value;saveWizardDraft();});
   bindModeVariantButtons();
 
-  document.querySelectorAll('[data-mode-info]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      openModeInfoDialog(button.dataset.modeInfo);
-    });
-  });
+  document.getElementById('sourceText')?.addEventListener('input',()=>saveWizardDraft());
+  document.getElementById('projectTitleOverride')?.addEventListener('input',()=>saveWizardDraft());
+  document.getElementById('importText')?.addEventListener('input',()=>saveWizardDraft());
 
-  document.querySelectorAll('[data-create-prompt-mode]').forEach((button) => {
-    button.addEventListener('click', () => {
-      state.promptMode = button.dataset.createPromptMode;
-      state.importTab = state.promptMode === 'json' ? 'file' : 'paste';
-      document.querySelectorAll('[data-create-prompt-mode]').forEach((item) => item.classList.toggle('active', item === button));
-      document.getElementById('promptPreview').textContent = getActivePrompt();
-      document.getElementById('formatNotice').textContent = state.promptMode === 'json'
-        ? 'ChatGPT erstellt eine oder bei großen Projekten mehrere .json-Dateien. Du kannst alle Teil-Dateien gemeinsam hochladen.'
-        : 'ChatGPT gibt formatierten §§§-Text aus. Diesen kopierst du anschließend unten in KartenWerk.';
-      setImportTab(state.importTab);
-    });
-  });
-
-  document.querySelectorAll('[data-import-tab]').forEach((button) => {
-    button.addEventListener('click', () => setImportTab(button.dataset.importTab));
-  });
-
-  document.getElementById('copyPromptButton').addEventListener('click', async () => {
-    try {
-      await copyText(getPromptWithOptionalSource());
-      toast('Prompt kopiert', 'Der ausgewählte Modus und ein eventuell eingetragener Lerntext wurden übernommen.');
-    } catch {
-      toast('Kopieren nicht möglich', 'Markiere den Prompt unter „Erzeugten Prompt ansehen“ und kopiere ihn manuell.');
+  document.getElementById('copyPromptButton')?.addEventListener('click', async()=>{ try{await copyText(getPromptWithOptionalSource());saveWizardDraft();toast('Prompt kopiert','Füge ihn jetzt in ChatGPT ein.');}catch{toast('Kopieren nicht möglich','Öffne die Prompt-Vorschau und kopiere manuell.');} });
+  document.getElementById('copyAndOpenChatGPTButton')?.addEventListener('click', async()=>{
+    saveWizardDraft(); state.wizardStep=3; saveWizardDraft({step:3});
+    try{await copyText(getPromptWithOptionalSource());}catch{}
+    const opened=window.open(CHATGPT_URL,'_blank');
+    if(opened) {
+      opened.opener=null;
+      renderCreateWizard();
+      toast('Prompt kopiert','Nach der Rückkehr wartet Schritt 3 auf deine Datei.');
+    } else {
+      window.location.href=CHATGPT_URL;
     }
   });
+  document.querySelectorAll('[data-import-tab]').forEach(b=>b.addEventListener('click',()=>{state.importTab=b.dataset.importTab;saveWizardDraft();renderCreateWizard();}));
+  document.getElementById('pasteClipboardButton')?.addEventListener('click',async()=>{try{document.getElementById('importText').value=await navigator.clipboard.readText();saveWizardDraft();}catch{toast('Zugriff nicht möglich','Füge den Text manuell ein.');}});
 
-  document.getElementById('copyAndOpenChatGPTButton').addEventListener('click', async () => {
-    const promptText = getPromptWithOptionalSource();
-    const copyPromise = copyText(promptText);
-    const opened = window.open(CHATGPT_URL, '_blank');
-    if (opened) opened.opener = null;
-    try {
-      await copyPromise;
-      toast('Prompt kopiert', 'ChatGPT wird geöffnet. Füge den Prompt dort in das Eingabefeld ein.');
-    } catch {
-      toast('ChatGPT geöffnet', 'Der Prompt konnte nicht automatisch kopiert werden. Nutze „Nur Prompt kopieren“.');
+  const fileInput=document.getElementById('fileInput'); const dropzone=document.getElementById('dropzone');
+  fileInput?.addEventListener('change',()=>{ const files=Array.from(fileInput.files||[]); window.__kartenwerkPendingFiles=files; const status=document.getElementById('selectedFilesStatus'); if(status)status.textContent=files.length?`${files.length} Datei(en) ausgewählt`:'Noch keine Datei ausgewählt'; });
+  ['dragenter','dragover'].forEach(n=>dropzone?.addEventListener(n,e=>{e.preventDefault();dropzone.classList.add('dragging');}));
+  ['dragleave','drop'].forEach(n=>dropzone?.addEventListener(n,e=>{e.preventDefault();dropzone.classList.remove('dragging');}));
+  dropzone?.addEventListener('drop',e=>{window.__kartenwerkPendingFiles=Array.from(e.dataTransfer.files||[]);const st=document.getElementById('selectedFilesStatus');if(st)st.textContent=`${window.__kartenwerkPendingFiles.length} Datei(en) ausgewählt`;});
+
+  document.getElementById('wizardCreate')?.addEventListener('click',async()=>{
+    const title=document.getElementById('projectTitleOverride')?.value||'';
+    if(state.importTab==='file'){
+      const files=window.__kartenwerkPendingFiles||[];
+      if(!files.length){toast('Datei fehlt','Wähle mindestens eine JSON- oder TXT-Datei aus.');return;}
+      await importFiles(files,title); window.__kartenwerkPendingFiles=[];
+    } else {
+      const text=document.getElementById('importText')?.value||'';
+      if(!text.trim()){toast('Text fehlt','Füge zuerst die ChatGPT-Ausgabe ein.');return;}
+      importProjectText(text,title);
     }
-    if (!opened) window.location.href = CHATGPT_URL;
-  });
-
-  document.getElementById('pasteClipboardButton').addEventListener('click', async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      document.getElementById('importText').value = text;
-      toast('Text eingefügt', 'Du kannst das Projekt jetzt erstellen.');
-    } catch {
-      toast('Zugriff nicht möglich', 'Halte das Feld gedrückt und füge den Text manuell ein.');
-    }
-  });
-
-  document.getElementById('importTextButton').addEventListener('click', () => {
-    const text = document.getElementById('importText').value;
-    importProjectText(text, document.getElementById('projectTitleOverride').value);
-  });
-
-  const fileInput = document.getElementById('fileInput');
-  const dropzone = document.getElementById('dropzone');
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files?.length) importFiles(Array.from(fileInput.files));
-    fileInput.value = '';
-  });
-  ['dragenter', 'dragover'].forEach((name) => dropzone.addEventListener(name, (event) => {
-    event.preventDefault();
-    dropzone.classList.add('dragging');
-  }));
-  ['dragleave', 'drop'].forEach((name) => dropzone.addEventListener(name, (event) => {
-    event.preventDefault();
-    dropzone.classList.remove('dragging');
-  }));
-  dropzone.addEventListener('drop', (event) => {
-    const files = Array.from(event.dataTransfer.files || []);
-    if (files.length) importFiles(files);
   });
 }
 
@@ -861,7 +888,7 @@ function showAppDialog() {
 
 function bindDialogClose() {
   appDialog.querySelectorAll('[data-close-dialog]').forEach((button) => {
-    button.addEventListener('click', () => appDialog.close());
+    button.addEventListener('click', () => { if (appDialog.classList.contains('wizard-dialog')) saveWizardDraft(); appDialog.close(); });
   });
 }
 
@@ -1248,6 +1275,7 @@ function importParsedProject(parsed, titleOverride = '', sourceLabel = '') {
   if (!countCards(project)) throw new Error('Es wurden keine gültigen Karten gefunden.');
   state.projects.push(project);
   saveProjects();
+  clearWizardDraft();
   if (appDialog.open) appDialog.close();
   location.hash = '';
   renderDashboard();
