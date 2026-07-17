@@ -696,14 +696,14 @@ function restoreWizardState() {
   state.generationMode = d.generationMode || '';
   state.cardSize = d.cardSize || 'learning';
   state.slideDetail = d.slideDetail || 'full';
-  state.promptMode = d.promptMode || '';
+  state.promptMode = d.promptMode || 'json';
   state.importTab = d.importTab || 'file';
   state.scopeChapter = d.scopeChapter || '';
   state.scopePages = d.scopePages || '';
 }
 
 function wizardStepComplete(step) {
-  if (step === 1) return Boolean(state.documentType && state.generationMode && state.promptMode);
+  if (step === 1) return Boolean(state.documentType && state.generationMode); // optionale Eingrenzungen und das standardmäßige JSON-Format blockieren nicht
   return true;
 }
 
@@ -723,7 +723,12 @@ function renderCreateWizard() {
         <div><p class="eyebrow">Neues Projekt</p><h2 id="appDialogTitle">Schritt ${step} von 3</h2></div>
         <button class="dialog-close" data-close-dialog type="button" aria-label="Schließen">×</button>
       </header>
-      <div class="wizard-progress" aria-label="Fortschritt"><span style="width:${step/3*100}%"></span></div>
+      <div class="wizard-stepper" aria-label="Projektfortschritt">
+        <span class="${step===1?'active':step>1?'done':''}"><b>1</b><small>Quelle wählen</small></span>
+        <span class="${step===2?'active':step>2?'done':''}"><b>2</b><small>Prompt erzeugen</small></span>
+        <span class="${step===3?'active':''}"><b>3</b><small>Importieren</small></span>
+      </div>
+      <div class="wizard-progress" aria-hidden="true"><span style="width:${step/3*100}%"></span></div>
       <main class="wizard-page">${renderWizardStep(step, draft)}</main>
       <footer class="wizard-footer">
         <button class="button ghost" id="wizardBack" type="button" ${step === 1 ? 'disabled' : ''}>← Zurück</button>
@@ -757,7 +762,7 @@ function renderWizardStep(step, draft) {
       <label class="compact-field">Ausgabeformat
         <select id="promptModeSelect" class="input centered-input">
           <option value="">Bitte auswählen …</option>
-          <option value="json" ${state.promptMode==='json'?'selected':''}>JSON-Datei (empfohlen)</option>
+          <option value="json" ${(!state.promptMode || state.promptMode==='json')?'selected':''}>JSON-Datei (empfohlen)</option>
           <option value="delimiter" ${state.promptMode==='delimiter'?'selected':''}>§§§-Text</option>
         </select>
       </label>

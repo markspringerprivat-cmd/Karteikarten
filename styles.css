@@ -1489,3 +1489,107 @@ main { padding-top: 34px; }
   .source-textarea { min-height: 80px !important; }
   .import-wizard-page .mobile-dropzone { min-height: 105px; }
 }
+
+/* KartenWerk 3.2 – mobile Randbereinigung, klarer Schrittstatus und Auswahlzustände */
+body {
+  background: var(--bg) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell,
+#app,
+.home-screen {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.wizard-card { grid-template-rows: auto auto 5px minmax(0, 1fr) auto; }
+.wizard-stepper {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 22px 12px;
+  background: var(--surface);
+}
+.wizard-stepper span {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  text-align: left;
+}
+.wizard-stepper b {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-3);
+  font-size: .78rem;
+}
+.wizard-stepper small {
+  overflow: hidden;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+}
+.wizard-stepper span.active { color: var(--primary-strong); }
+.wizard-stepper span.active b,
+.wizard-stepper span.done b {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+.wizard-stepper span.done { color: var(--text); }
+
+.variant-option {
+  position: relative;
+  padding-left: 38px !important;
+}
+.variant-option::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: var(--surface);
+}
+.variant-option.active::before {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 4px var(--surface);
+  background: var(--primary);
+}
+
+@media (max-width: 760px) {
+  body { padding: 0 !important; }
+  main,
+  #app {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    border: 0 !important;
+  }
+  .home-screen { width: 100%; max-width: none; }
+}
+
+@media (max-width: 600px) {
+  .wizard-stepper { padding: 0 14px 9px; gap: 4px; }
+  .wizard-stepper span { grid-template-columns: 25px minmax(0, 1fr); gap: 5px; }
+  .wizard-stepper b { width: 25px; height: 25px; }
+  .wizard-stepper small { font-size: .63rem; }
+  #contextOptions .variant-option small { display: block; }
+  .variant-option { padding-left: 34px !important; }
+  .variant-option::before { left: 10px; }
+}
